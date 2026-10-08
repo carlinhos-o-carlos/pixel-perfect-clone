@@ -1,24 +1,37 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Wallet, ShieldCheck } from "lucide-react";
+import { EmptyState, PageHeader } from "@/ui/Page";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Início — Finanças" },
+      { name: "description", content: "Resumo do mês: receitas, despesas e saldo, com seus dados só no seu dispositivo." },
+      { property: "og:title", content: "Início — Finanças" },
+      { property: "og:description", content: "Finanças pessoais privadas, offline e sem cadastro." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
+  const month = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(new Date());
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <>
+      <PageHeader title="Olá!" subtitle={`Como vai sua vida financeira em ${month}?`} />
+      <EmptyState icon={<Wallet className="h-6 w-6" />} title="Comece cadastrando uma conta">
+        Assim que você tiver contas e lançamentos, este resumo mostra o que foi realizado,
+        o que está agendado e o que está previsto no mês. Cadastro de contas chega na próxima fase.
+      </EmptyState>
+      <div className="mt-6 flex gap-3 rounded-2xl bg-secondary p-4 text-sm text-secondary-foreground">
+        <ShieldCheck className="h-5 w-5 shrink-0 text-primary" />
+        <p>
+          Sem cadastro e sem servidor: tudo fica guardado neste navegador. Faça backups
+          regularmente — limpar os dados do navegador ou perder o aparelho apaga as informações.
+        </p>
+      </div>
+    </>
   );
 }

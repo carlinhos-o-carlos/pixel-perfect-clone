@@ -48,7 +48,7 @@ Asset (manual)   Settings (single row)
 - `expense` → usable only on Expense transactions (Alimentação, Transporte, Saúde e Bem-estar, Lazer, Demais Despesas, Educação, Habitação, plus a system category "Juros e Encargos")
 - `transfer` → optional *purpose* for transfers (Investimentos, Reserva, Pagamento de fatura, Outro). Purely descriptive: it never affects income/expense totals.
 
-**Transaction** — `type`: `income | expense | transfer | debt_payment`. Amount is always positive and the type sets the direction.
+**Transaction** — `type`: `income | expense | transfer | debt_payment | loan_proceeds`. Amount is always positive and the type sets the direction.
 - income/expense: `accountId`, `categoryId` (kind must match).
 - transfer: `accountId` (source), `destinationAccountId`, optional `categoryId` (transfer kind). Source ≠ destination, same currency (MVP).
 - debt_payment: `accountId`, `debtId`, `principalAmount`, `interestAmount` (fees included in interest for the MVP). See rule D.
@@ -77,9 +77,15 @@ Asset (manual)   Settings (single row)
 | Income | + account | Income | + |
 | Expense | − account | Expense (category) | − |
 | Transfer | − source, + destination | none | 0 |
-| Debt payment | − full amount | interest only, as expense | − interest |
+| Debt payment (allocated) | − full amount | interest + fees as expense | − interest − fees |
+| Debt payment (pending) | − full amount | none yet | 0 (suspense offset) |
+| Loan proceeds | + account | none | 0 |
 
-**B. Balances and dates.** Balance as of date D = opening balance + every **confirmed** transaction with date ≤ D. The "current balance" uses today. A future-dated confirmed transaction doesn't affect the current balance until its date, and it appears under "Agendado". Planned items appear only in forecasts, labeled "Previsto".
+**B. Actual vs scheduled vs planned.** Each transaction has an *effective state* derived from `status` and `date` relative to today:
+- *Realizado* (actual): status confirmed AND date ≤ today. Only these count in today's balances and actual-period reports.
+- *Agendado* (scheduled): status confirmed AND date > today. Excluded from today's balances and actual reports until its date arrives (then it becomes actual automatically, with no write needed). Always labeled "Agendado".
+- *Previsto* (planned): status planned, or recurring occurrences not yet confirmed. Shown only in forecasts.
+Balance as of D = opening balance + Σ confirmed transactions with date ≤ D. Pure function `effectiveState(tx, today)`, with tests.
 
 **C. Credit cards (sign convention).** Every account balance is signed: positive = money you have, negative = money you owe.
 - A card purchase is an Expense on the card account, so the balance becomes more negative.
@@ -87,17 +93,25 @@ Asset (manual)   Settings (single row)
 - Card interest/fees are an Expense on the card account (category Juros e Encargos).
 - In net worth, the card's negative balance is counted once, as a liability. Cards cannot be registered as Debts, and the app blocks a debt_payment against a card.
 
-**D. Debts.** Outstanding = openingBalance − Σ principal of confirmed linked payments (+ any optional manual adjustment entry).
-- Payment entry: the user enters the total, then principal and interest (principal + interest = total, validated).
-- **Unknown split (MVP):** the payment is saved with `allocation = pending`. The full amount leaves the cash account, and the debt balance and expense report don't change yet. The debt shows a "Pagamento sem divisão" badge, and the dashboard shows a reminder. Net worth temporarily shows a visible "pendente" notice. The app never assumes an all-principal or all-interest split.
-- No amortization engine in the MVP.
+**D. Debts and pending allocation.**
+- Outstanding debt = openingBalance − Σ principal of *allocated* confirmed payments.
+- A debt_payment has `allocation`: `allocated` (principal + interest + fees = total, validated) or `pending` (split unknown).
+- **Pending state:** the full amount leaves the cash account (cash flow is correct). The unallocated amount becomes an explicit domain value `pendingDebtAllocation` (per currency), which net worth adds back as a temporary *suspense asset* labeled "Pagamento a classificar". Net worth therefore does not drop by the full payment. The debt balance and expense report remain unchanged. A badge and a dashboard reminder appear.
+- **On allocation:** the pending offset is removed, the debt is reduced by principal, and interest + fees are recognized as expenses (category Juros e Encargos) on the payment date.
+- Tests: net worth before payment, while pending (unchanged), and after allocation (dropped by interest + fees only). Validation tests for split sums.
+
+**D2. Loan proceeds.** A dedicated transaction type `loan_proceeds` (accountId, debtId, amount). It increases the account balance, does not count as income, and is linked to the Debt, whose openingBalance carries the liability. Net worth change = 0.
+- Created only when the user ticks "Registrar entrada do valor na conta" while creating the Debt.
+- Duplicate guard: at most one loan_proceeds per debt (unique index on debtId for this type). The checkbox is hidden or disabled once one exists, and the form warns if a similar income in the same amount appears within ±7 days.
+- Tests: balance +amount, income report unchanged, net worth unchanged, second insert rejected.
 
 **E. Net worth (per currency).**
 Net worth = Σ positive account balances + Σ asset values − Σ |negative account balances| (cards, overdraft accounts) − Σ outstanding Debts.
 Double-count guards:
 - Brokerage holdings live only in a brokerage Account. Asset types exclude cash and investment accounts, and the form warns about this.
 - Cards are only Accounts, never Debts.
-- A loan's received cash is recorded as the account's opening balance or an income tagged as loan proceeds (excluded from the income report), while the Debt carries the liability, so the two offset correctly.
+- A loan's cash enters through `loan_proceeds` (never income) and the Debt carries the liability, so the two offset.
+- `pendingDebtAllocation` is a suspense asset that exists only until the payment is allocated.
 
 **F. Goals (no double counting).**
 - *Account-linked:* progress = sum of the linked accounts' current balances (same currency), capped at display, never added to net worth. Each account can be linked to **at most one** goal.
@@ -128,13 +142,8 @@ Double-count guards:
 - A permanent notes panel explains: inflation erodes purchasing power; taxes and fees reduce the effective rate; market volatility and sequence-of-returns risk can deplete capital; withdrawal rates come from historical studies and are not guarantees; this is not investment advice.
 - Results show a range across the presets instead of one precise number.
 
-## 9. Remaining decisions (your input needed)
-1. **Loan proceeds:** when you take a loan, should the app record the cash received automatically when the Debt is created (proposed: optional checkbox "registrar entrada do valor na conta"), or leave it to you?
-2. **Backup reminder interval:** 30 days proposed. OK?
-3. **Reference spreadsheet:** please share it before Phase 8.
-4. **App name and visual style:** to be chosen at the start of Phase 1.
-
-Already settled by your feedback: recurring items need confirmation, goals have both modes, cards are accounts, multi-currency is shown without conversion, and restore replaces data (merge is deferred).
+## 9. Decisions
+Settled: 30-day backup reminder; loan proceeds are recorded only via the opt-in checkbox; existing stack and phased process kept. Still open: the reference spreadsheet (needed before Phase 8). The app name ("Finanças") and visual style are provisional choices made in Phase 1 that you can change.
 
 ## 10. Implementation sequence
 1. Foundation: design system, navigation, Dexie schema v1, seed categories, settings, tests.
