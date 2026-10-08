@@ -46,7 +46,7 @@ function Configuracoes() {
         <section className="rounded-2xl border bg-card p-4 shadow-soft">
           <Label htmlFor="currency">Moeda padrão</Label>
           <Select
-            value={settings?.displayCurrency}
+            value={settings?.displayCurrency ?? ""}
             onValueChange={async (v) => {
               await updateSettings({ displayCurrency: v });
               toast("Moeda padrão atualizada.");
