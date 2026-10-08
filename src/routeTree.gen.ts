@@ -10,33 +10,102 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LancamentosRouteImport } from './routes/lancamentos'
+import { Route as PlanejamentoRouteImport } from './routes/planejamento'
+import { Route as MaisIndexRouteImport } from './routes/mais.index'
+import { Route as MaisCategoriasRouteImport } from './routes/mais.categorias'
+import { Route as MaisConfiguracoesRouteImport } from './routes/mais.configuracoes'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LancamentosRoute = LancamentosRouteImport.update({
+  id: '/lancamentos',
+  path: '/lancamentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanejamentoRoute = PlanejamentoRouteImport.update({
+  id: '/planejamento',
+  path: '/planejamento',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaisIndexRoute = MaisIndexRouteImport.update({
+  id: '/mais/',
+  path: '/mais/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaisCategoriasRoute = MaisCategoriasRouteImport.update({
+  id: '/mais/categorias',
+  path: '/mais/categorias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaisConfiguracoesRoute = MaisConfiguracoesRouteImport.update({
+  id: '/mais/configuracoes',
+  path: '/mais/configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/lancamentos': typeof LancamentosRoute
+  '/planejamento': typeof PlanejamentoRoute
+  '/mais/categorias': typeof MaisCategoriasRoute
+  '/mais/configuracoes': typeof MaisConfiguracoesRoute
+  '/mais/': typeof MaisIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/lancamentos': typeof LancamentosRoute
+  '/planejamento': typeof PlanejamentoRoute
+  '/mais/categorias': typeof MaisCategoriasRoute
+  '/mais/configuracoes': typeof MaisConfiguracoesRoute
+  '/mais': typeof MaisIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/lancamentos': typeof LancamentosRoute
+  '/planejamento': typeof PlanejamentoRoute
+  '/mais/categorias': typeof MaisCategoriasRoute
+  '/mais/configuracoes': typeof MaisConfiguracoesRoute
+  '/mais/': typeof MaisIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/lancamentos'
+    | '/planejamento'
+    | '/mais/categorias'
+    | '/mais/configuracoes'
+    | '/mais/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/lancamentos'
+    | '/planejamento'
+    | '/mais/categorias'
+    | '/mais/configuracoes'
+    | '/mais'
+  id:
+    | '__root__'
+    | '/'
+    | '/lancamentos'
+    | '/planejamento'
+    | '/mais/categorias'
+    | '/mais/configuracoes'
+    | '/mais/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LancamentosRoute: typeof LancamentosRoute
+  PlanejamentoRoute: typeof PlanejamentoRoute
+  MaisCategoriasRoute: typeof MaisCategoriasRoute
+  MaisConfiguracoesRoute: typeof MaisConfiguracoesRoute
+  MaisIndexRoute: typeof MaisIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +117,51 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lancamentos': {
+      id: '/lancamentos'
+      path: '/lancamentos'
+      fullPath: '/lancamentos'
+      preLoaderRoute: typeof LancamentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/planejamento': {
+      id: '/planejamento'
+      path: '/planejamento'
+      fullPath: '/planejamento'
+      preLoaderRoute: typeof PlanejamentoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mais/': {
+      id: '/mais/'
+      path: '/mais'
+      fullPath: '/mais/'
+      preLoaderRoute: typeof MaisIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mais/categorias': {
+      id: '/mais/categorias'
+      path: '/mais/categorias'
+      fullPath: '/mais/categorias'
+      preLoaderRoute: typeof MaisCategoriasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mais/configuracoes': {
+      id: '/mais/configuracoes'
+      path: '/mais/configuracoes'
+      fullPath: '/mais/configuracoes'
+      preLoaderRoute: typeof MaisConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LancamentosRoute: LancamentosRoute,
+  PlanejamentoRoute: PlanejamentoRoute,
+  MaisCategoriasRoute: MaisCategoriasRoute,
+  MaisConfiguracoesRoute: MaisConfiguracoesRoute,
+  MaisIndexRoute: MaisIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
