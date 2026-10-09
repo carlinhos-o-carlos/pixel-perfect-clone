@@ -23,7 +23,10 @@ export const Route = createFileRoute("/planejamento")({
       <PageHeader title="Planejamento" />
       <ul className="grid gap-3">
         {ITEMS.map((i) => (
-          <li key={i.title} className="flex items-center justify-between rounded-2xl border bg-card p-4 opacity-70 shadow-soft">
+          <li
+            key={i.title}
+            className="flex items-center justify-between rounded-2xl border bg-card p-4 opacity-70 shadow-soft"
+          >
             <div>
               <p className="font-semibold">{i.title}</p>
               <p className="text-sm text-muted-foreground">{i.text}</p>

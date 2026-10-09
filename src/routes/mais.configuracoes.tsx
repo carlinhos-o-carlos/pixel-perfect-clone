@@ -7,7 +7,13 @@ import { updateSettings } from "@/data/settings";
 import { formatMoney } from "@/domain/money";
 import { PageHeader } from "@/ui/Page";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/mais/configuracoes")({
   head: () => ({
@@ -30,13 +36,20 @@ function Configuracoes() {
   const [persisted, setPersisted] = useState<boolean | null>(null);
 
   useEffect(() => {
-    navigator.storage?.persisted?.().then(setPersisted).catch(() => setPersisted(null));
+    navigator.storage
+      ?.persisted?.()
+      .then(setPersisted)
+      .catch(() => setPersisted(null));
   }, []);
 
   async function requestPersist() {
     const ok = (await navigator.storage?.persist?.()) ?? false;
     setPersisted(ok);
-    toast(ok ? "Armazenamento persistente ativado." : "O navegador não concedeu armazenamento persistente.");
+    toast(
+      ok
+        ? "Armazenamento persistente ativado."
+        : "O navegador não concedeu armazenamento persistente.",
+    );
   }
 
   return (
@@ -72,8 +85,8 @@ function Configuracoes() {
         <section className="rounded-2xl border bg-card p-4 shadow-soft">
           <h2 className="font-semibold">Armazenamento local</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Seus dados ficam só neste navegador. O backup em arquivo chega em uma fase futura;
-            até lá, evite limpar os dados do navegador.
+            Seus dados ficam só neste navegador. O backup em arquivo chega em uma fase futura; até
+            lá, evite limpar os dados do navegador.
           </p>
           <p className="mt-3 text-sm">
             Persistente:{" "}

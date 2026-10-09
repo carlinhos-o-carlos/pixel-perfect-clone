@@ -42,7 +42,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               to={to}
               activeOptions={{ exact: to === "/" }}
               className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sidebar-foreground hover:bg-sidebar-accent"
-              activeProps={{ className: "bg-sidebar-accent font-semibold text-sidebar-accent-foreground" }}
+              activeProps={{
+                className: "bg-sidebar-accent font-semibold text-sidebar-accent-foreground",
+              }}
             >
               <Icon className="h-5 w-5" />
               {label}

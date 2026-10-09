@@ -25,8 +25,10 @@ export function addCents(...values: Cents[]): Cents {
 /** Minor-unit digits for a currency (BRL/USD/EUR = 2, JPY = 0). */
 export function currencyDigits(currency: CurrencyCode): number {
   try {
-    return new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions()
-      .maximumFractionDigits ?? 2;
+    return (
+      new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions()
+        .maximumFractionDigits ?? 2
+    );
   } catch {
     return 2;
   }
@@ -38,7 +40,7 @@ export function currencyDigits(currency: CurrencyCode): number {
  */
 export function parseToCents(input: string, currency: CurrencyCode = "BRL"): Cents | null {
   const digits = currencyDigits(currency);
-  let s = input.trim().replace(/[^\d,.\-]/g, "");
+  let s = input.trim().replace(/[^\d,.-]/g, "");
   if (!s) return null;
   const negative = s.startsWith("-");
   s = s.replace(/-/g, "");

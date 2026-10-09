@@ -121,7 +121,8 @@ export interface Asset extends Audit {
 
 export interface Goal extends Audit {
   name: string;
-  goalType: "emergency_fund" | "purchase" | "travel" | "home" | "debt_payoff" | "independence" | "custom";
+  goalType:
+    "emergency_fund" | "purchase" | "travel" | "home" | "debt_payoff" | "independence" | "custom";
   currency: CurrencyCode;
   target: Cents;
   targetDate?: ISODate;

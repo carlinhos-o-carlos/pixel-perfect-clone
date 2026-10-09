@@ -14,7 +14,10 @@ export const Route = createFileRoute("/mais/")({
   head: () => ({
     meta: [
       { title: "Mais — Finanças" },
-      { name: "description", content: "Contas, patrimônio, objetivos, ferramentas e configurações." },
+      {
+        name: "description",
+        content: "Contas, patrimônio, objetivos, ferramentas e configurações.",
+      },
       { property: "og:title", content: "Mais — Finanças" },
       { property: "og:description", content: "Contas, patrimônio, objetivos e configurações." },
       { property: "og:type", content: "website" },
@@ -31,13 +34,20 @@ export const Route = createFileRoute("/mais/")({
             { to: "/mais/configuracoes", title: "Configurações" },
           ] as const
         ).map((l) => (
-          <Link key={l.to} to={l.to} className="flex min-h-14 items-center justify-between px-4 hover:bg-muted">
+          <Link
+            key={l.to}
+            to={l.to}
+            className="flex min-h-14 items-center justify-between px-4 hover:bg-muted"
+          >
             <span className="font-medium">{l.title}</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
         ))}
         {SOON.map((s) => (
-          <div key={s.title} className="flex min-h-14 items-center justify-between px-4 text-muted-foreground">
+          <div
+            key={s.title}
+            className="flex min-h-14 items-center justify-between px-4 text-muted-foreground"
+          >
             <span>{s.title}</span>
             <PhaseBadge phase={s.phase} />
           </div>
