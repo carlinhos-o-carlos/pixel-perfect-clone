@@ -13,10 +13,20 @@ export async function listAccounts(db: FinanceDB = getDb()): Promise<Account[]> 
   return (await db.accounts.toArray()).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 }
 
-export async function createAccount(input: AccountInput, db: FinanceDB = getDb()): Promise<Account> {
+export async function createAccount(
+  input: AccountInput,
+  db: FinanceDB = getDb(),
+): Promise<Account> {
   assertValid(validateAccount(input));
   const now = new Date().toISOString();
-  const account: Account = { id: newId(), ...input, name: input.name.trim(), archived: false, createdAt: now, updatedAt: now };
+  const account: Account = {
+    id: newId(),
+    ...input,
+    name: input.name.trim(),
+    archived: false,
+    createdAt: now,
+    updatedAt: now,
+  };
   await db.accounts.add(account);
   return account;
 }
@@ -31,8 +41,15 @@ export async function updateAccount(
     if (!current) throw new ValidationError(["Conta não encontrada."]);
     assertValid(validateAccount(input));
     if (input.currency !== current.currency && (await txCount(db, id)) > 0)
-      throw new ValidationError(["Não é possível trocar a moeda de uma conta que já tem lançamentos."]);
-    const next: Account = { ...current, ...input, name: input.name.trim(), updatedAt: new Date().toISOString() };
+      throw new ValidationError([
+        "Não é possível trocar a moeda de uma conta que já tem lançamentos.",
+      ]);
+    const next: Account = {
+      ...current,
+      ...input,
+      name: input.name.trim(),
+      updatedAt: new Date().toISOString(),
+    };
     await db.accounts.put(next);
     return next;
   });

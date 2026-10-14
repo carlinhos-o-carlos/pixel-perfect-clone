@@ -34,7 +34,11 @@ export const Route = createFileRoute("/mais/contas")({
 function Contas() {
   const data = useLiveQuery(async () => {
     const db = getDb();
-    const [accounts, txs, settings] = await Promise.all([db.accounts.toArray(), db.transactions.toArray(), getSettings(db)]);
+    const [accounts, txs, settings] = await Promise.all([
+      db.accounts.toArray(),
+      db.transactions.toArray(),
+      getSettings(db),
+    ]);
     const today = todayISO();
     return {
       accounts: accounts.sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
@@ -44,7 +48,9 @@ function Contas() {
       settings,
     };
   }, []);
-  const [dialog, setDialog] = useState<{ open: boolean; account?: Account }>({ open: false });
+  const [dialog, setDialog] = useState<{ open: boolean; account?: Account | undefined }>({
+    open: false,
+  });
 
   if (!data) return <p className="text-sm text-muted-foreground">Carregando…</p>;
   const { accounts, actual, projected, used, settings } = data;
@@ -66,21 +72,45 @@ function Contas() {
     <li key={a.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium">{a.name}</p>
-        <p className="text-xs text-muted-foreground">{ACCOUNT_KIND_LABEL[a.kind]} · {a.currency}</p>
+        <p className="text-xs text-muted-foreground">
+          {ACCOUNT_KIND_LABEL[a.kind]} · {a.currency}
+        </p>
       </div>
       <div className="text-right">
-        <p className={cn("font-semibold tabular-nums", actual[a.id] < 0 && "text-expense")}>{formatMoney(actual[a.id], a.currency, loc)}</p>
+        <p className={cn("font-semibold tabular-nums", actual[a.id] < 0 && "text-expense")}>
+          {formatMoney(actual[a.id], a.currency, loc)}
+        </p>
         {projected[a.id] !== actual[a.id] && (
-          <p className="text-xs text-muted-foreground">Previsto: {formatMoney(projected[a.id], a.currency, loc)}</p>
+          <p className="text-xs text-muted-foreground">
+            Previsto: {formatMoney(projected[a.id], a.currency, loc)}
+          </p>
         )}
       </div>
       <div className="flex w-full justify-end gap-1 sm:w-auto">
-        <Button size="sm" variant="ghost" onClick={() => setDialog({ open: true, account: a })}>Editar</Button>
-        <Button size="sm" variant="ghost" onClick={() => run(() => setAccountArchived(a.id, !a.archived), a.archived ? "Conta reativada" : "Conta arquivada")}>
+        <Button size="sm" variant="ghost" onClick={() => setDialog({ open: true, account: a })}>
+          Editar
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() =>
+            run(
+              () => setAccountArchived(a.id, !a.archived),
+              a.archived ? "Conta reativada" : "Conta arquivada",
+            )
+          }
+        >
           {a.archived ? "Reativar" : "Arquivar"}
         </Button>
         {!used.has(a.id) && (
-          <Button size="sm" variant="ghost" className="text-destructive" onClick={() => run(() => deleteAccount(a.id), "Conta excluída")}>Excluir</Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-destructive"
+            onClick={() => run(() => deleteAccount(a.id), "Conta excluída")}
+          >
+            Excluir
+          </Button>
         )}
       </div>
     </li>
@@ -88,7 +118,10 @@ function Contas() {
 
   return (
     <>
-      <PageHeader title="Contas" subtitle="Saldo realizado: saldo inicial + lançamentos confirmados até hoje." />
+      <PageHeader
+        title="Contas"
+        subtitle="Saldo realizado: saldo inicial + lançamentos confirmados até hoje."
+      />
       <Button className="mb-5 h-11" onClick={() => setDialog({ open: true })}>
         <Plus className="h-4 w-4" /> Nova conta
       </Button>
@@ -108,16 +141,29 @@ function Contas() {
               ))}
             </div>
           )}
-          {active.length > 0 && <ul className="divide-y overflow-hidden rounded-2xl border bg-card shadow-soft">{active.map(row)}</ul>}
+          {active.length > 0 && (
+            <ul className="divide-y overflow-hidden rounded-2xl border bg-card shadow-soft">
+              {active.map(row)}
+            </ul>
+          )}
           {archived.length > 0 && (
             <section>
-              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Arquivadas</h2>
-              <ul className="divide-y overflow-hidden rounded-2xl border bg-card opacity-75 shadow-soft">{archived.map(row)}</ul>
+              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Arquivadas
+              </h2>
+              <ul className="divide-y overflow-hidden rounded-2xl border bg-card opacity-75 shadow-soft">
+                {archived.map(row)}
+              </ul>
             </section>
           )}
         </div>
       )}
-      <AccountDialog open={dialog.open} account={dialog.account} defaultCurrency={settings.displayCurrency} onOpenChange={(open) => setDialog((d) => ({ ...d, open }))} />
+      <AccountDialog
+        open={dialog.open}
+        account={dialog.account}
+        defaultCurrency={settings.displayCurrency}
+        onOpenChange={(open) => setDialog((d) => ({ ...d, open }))}
+      />
     </>
   );
 }

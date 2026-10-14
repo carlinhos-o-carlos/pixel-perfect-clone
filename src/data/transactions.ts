@@ -20,7 +20,10 @@ export async function createTransaction(
 ): Promise<Transaction> {
   const d = clean(draft);
   return db.transaction("rw", db.accounts, db.categories, db.transactions, async () => {
-    const [accounts, categories] = await Promise.all([db.accounts.toArray(), db.categories.toArray()]);
+    const [accounts, categories] = await Promise.all([
+      db.accounts.toArray(),
+      db.categories.toArray(),
+    ]);
     assertValid(validateTransaction(d, accounts, categories));
     const currency = accounts.find((a) => a.id === d.accountId)!.currency;
     const now = new Date().toISOString();
@@ -41,7 +44,10 @@ export async function updateTransaction(
     if (!prev) throw new ValidationError(["Lançamento não encontrado."]);
     if (prev.type !== "income" && prev.type !== "expense" && prev.type !== "transfer")
       throw new ValidationError(["Este tipo de lançamento ainda não pode ser editado aqui."]);
-    const [accounts, categories] = await Promise.all([db.accounts.toArray(), db.categories.toArray()]);
+    const [accounts, categories] = await Promise.all([
+      db.accounts.toArray(),
+      db.categories.toArray(),
+    ]);
     assertValid(validateTransaction(d, accounts, categories, prev));
     const currency = accounts.find((a) => a.id === d.accountId)!.currency;
     // Rebuild from the draft so fields dropped by a type change (e.g. destination) disappear.
