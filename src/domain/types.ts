@@ -64,7 +64,7 @@ export type Frequency = "weekly" | "biweekly" | "monthly" | "yearly";
 
 export interface RecurringRule extends Audit {
   name: string;
-  type: Exclude<TransactionType, "debt_payment" | "loan_proceeds">;
+  type: "income" | "expense";
   amount: Cents;
   currency: CurrencyCode;
   accountId: string;

@@ -116,6 +116,7 @@ export function projectOccurrences(
   const skippedKeys = new Set(skipped.map((s) => `${s.recurringRuleId}:${s.occurrenceDate}`));
   const out: RecurringOccurrence[] = [];
   for (const rule of rules) {
+    if (!rule.active || rule.endedAt) continue;
     for (const occurrenceDate of occurrenceDates(rule, from, to)) {
       const key = `${rule.id}:${occurrenceDate}`;
       if (skippedKeys.has(key)) continue;
