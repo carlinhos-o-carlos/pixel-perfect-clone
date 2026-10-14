@@ -89,7 +89,7 @@ describe("balances", () => {
     expect((await balances())[a.id]).toBe(13000);
     expect((await balances("projected"))[a.id]).toBe(13000 - 999 - 111);
     const s = monthSummary(await db.transactions.toArray(), "2026-10", TODAY);
-    expect(s.BRL).toEqual({ income: 5000, expense: 2000 });
+    expect(s["BRL"]).toEqual({ income: 5000, expense: 2000 });
   });
 
   it("transfer is one row, moves money and is not income/expense", async () => {
