@@ -88,8 +88,7 @@ export function RecurringRuleDialog({
         categoryId,
         startDate,
         frequency,
-        dayOfMonth:
-          frequency === "monthly" || frequency === "yearly" ? Number(day) : undefined,
+        dayOfMonth: frequency === "monthly" || frequency === "yearly" ? Number(day) : undefined,
         endDate: endDate || undefined,
         notes,
       };
@@ -115,7 +114,11 @@ export function RecurringRuleDialog({
           <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : (
           <form onSubmit={submit} className="grid gap-4">
-            <div role="radiogroup" aria-label="Tipo" className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+            <div
+              role="radiogroup"
+              aria-label="Tipo"
+              className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1"
+            >
               {(["expense", "income"] as const).map((item) => (
                 <Button
                   key={item}
@@ -136,45 +139,106 @@ export function RecurringRuleDialog({
               ))}
             </div>
             <Field label="Descrição" htmlFor="rec-name">
-              <Input id="rec-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
+              <Input
+                id="rec-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                maxLength={120}
+              />
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label={`Valor${source ? ` (${source.currency})` : ""}`} htmlFor="rec-amount">
-                <Input id="rec-amount" inputMode="decimal" placeholder="0,00" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                <Input
+                  id="rec-amount"
+                  inputMode="decimal"
+                  placeholder="0,00"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
               </Field>
               <Field label="Início" htmlFor="rec-start">
-                <Input id="rec-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <Input
+                  id="rec-start"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
               </Field>
             </div>
             <Field label="Conta" htmlFor="rec-account">
-              <select id="rec-account" className={selectClass} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+              <select
+                id="rec-account"
+                className={selectClass}
+                value={accountId}
+                onChange={(e) => setAccountId(e.target.value)}
+              >
                 <option value="">Selecione…</option>
-                {usableAccounts.map((account) => <option key={account.id} value={account.id}>{account.name} ({account.currency})</option>)}
+                {usableAccounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name} ({account.currency})
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label="Categoria" htmlFor="rec-category">
-              <select id="rec-category" className={selectClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+              <select
+                id="rec-category"
+                className={selectClass}
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+              >
                 <option value="">Selecione…</option>
-                {cats.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+                {cats.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
               </select>
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Frequência" htmlFor="rec-frequency">
-                <select id="rec-frequency" className={selectClass} value={frequency} onChange={(e) => setFrequency(e.target.value as Frequency)}>
-                  {FREQUENCIES.map((item) => <option key={item} value={item}>{FREQUENCY_LABEL[item]}</option>)}
+                <select
+                  id="rec-frequency"
+                  className={selectClass}
+                  value={frequency}
+                  onChange={(e) => setFrequency(e.target.value as Frequency)}
+                >
+                  {FREQUENCIES.map((item) => (
+                    <option key={item} value={item}>
+                      {FREQUENCY_LABEL[item]}
+                    </option>
+                  ))}
                 </select>
               </Field>
               {(frequency === "monthly" || frequency === "yearly") && (
                 <Field label="Dia de vencimento" htmlFor="rec-day">
-                  <Input id="rec-day" type="number" min={1} max={31} value={day} onChange={(e) => setDay(e.target.value)} />
+                  <Input
+                    id="rec-day"
+                    type="number"
+                    min={1}
+                    max={31}
+                    value={day}
+                    onChange={(e) => setDay(e.target.value)}
+                  />
                 </Field>
               )}
             </div>
             <Field label="Término (opcional)" htmlFor="rec-end">
-              <Input id="rec-end" type="date" value={endDate} min={startDate} onChange={(e) => setEndDate(e.target.value)} />
+              <Input
+                id="rec-end"
+                type="date"
+                value={endDate}
+                min={startDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
             </Field>
             <Field label="Observações (opcional)" htmlFor="rec-notes">
-              <Textarea id="rec-notes" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
+              <Textarea
+                id="rec-notes"
+                rows={2}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
             </Field>
             <ErrorList errors={errors} />
             <Button type="submit" disabled={saving || !usableAccounts.length} className="h-11">
