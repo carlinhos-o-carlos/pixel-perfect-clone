@@ -150,7 +150,7 @@ export async function saveOccurrence(
       return next;
     }
     const now = new Date().toISOString();
-    const tx = {
+    const tx: Transaction = {
       id: newId(),
       type: occurrence.type,
       status,
@@ -160,12 +160,12 @@ export async function saveOccurrence(
       accountId: occurrence.accountId,
       categoryId: occurrence.categoryId,
       description: occurrence.description,
+      ...(occurrence.notes ? { notes: occurrence.notes } : {}),
       recurringRuleId: occurrence.recurringRuleId,
       occurrenceDate: occurrence.occurrenceDate,
       createdAt: now,
       updatedAt: now,
     };
-    if (occurrence.notes) tx.notes = occurrence.notes;
     await db.transactions.add(tx);
     return tx;
   });
