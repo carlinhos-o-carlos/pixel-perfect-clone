@@ -14,7 +14,7 @@ import type {
   Transaction,
 } from "@/domain/types";
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export class FinanceDB extends Dexie {
   accounts!: EntityTable<Account, "id">;
@@ -46,6 +46,12 @@ export class FinanceDB extends Dexie {
       goalAllocations: "id, goalId",
       budgets: "id, &[categoryId+month], month",
       settings: "id",
+    });
+    // v2 makes each recurring occurrence unique. Keep v1 untouched so existing
+    // browser databases are upgraded safely in place.
+    this.version(2).stores({
+      transactions:
+        "id, date, type, status, accountId, destinationAccountId, categoryId, debtId, &[recurringRuleId+occurrenceDate]",
     });
     this.on("populate", (tx) => seedInitialData(tx.table("categories"), tx.table("settings")));
   }
