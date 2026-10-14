@@ -115,7 +115,8 @@ export function computeBalances(
   for (const tx of txs) {
     if (mode === "actual" && effectiveState(tx, today) !== "actual") continue;
     for (const [id, delta] of accountEffects(tx)) {
-      if (id in out) out[id] = addCents(out[id], delta);
+      const cur = out[id];
+      if (cur !== undefined) out[id] = addCents(cur, delta);
     }
   }
   return out;
@@ -156,9 +157,9 @@ export function monthSummary(
 }
 
 export interface TransactionFilter {
-  month?: string; // "YYYY-MM"
-  type?: EntryType;
-  accountId?: string;
+  month?: string | undefined; // "YYYY-MM"
+  type?: EntryType | undefined;
+  accountId?: string | undefined;
 }
 
 /** Filter and sort newest first. An account filter matches source or destination. */

@@ -62,7 +62,7 @@ export function EntryProvider({ children }: { children: ReactNode }) {
 
 const TYPES: EntryType[] = ["expense", "income", "transfer"];
 
-function EntryForm({ tx, onDone }: { tx?: Transaction; onDone: () => void }) {
+function EntryForm({ tx, onDone }: { tx?: Transaction | undefined; onDone: () => void }) {
   const accounts = useLiveQuery(() => getDb().accounts.toArray(), []);
   const categories = useLiveQuery(() => getDb().categories.toArray(), []);
   const [type, setType] = useState<EntryType>((tx?.type as EntryType) ?? "expense");

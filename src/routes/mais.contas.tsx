@@ -77,12 +77,12 @@ function Contas() {
         </p>
       </div>
       <div className="text-right">
-        <p className={cn("font-semibold tabular-nums", actual[a.id] < 0 && "text-expense")}>
-          {formatMoney(actual[a.id], a.currency, loc)}
+        <p className={cn("font-semibold tabular-nums", (actual[a.id] ?? 0) < 0 && "text-expense")}>
+          {formatMoney(actual[a.id] ?? 0, a.currency, loc)}
         </p>
-        {projected[a.id] !== actual[a.id] && (
+        {(projected[a.id] ?? 0) !== (actual[a.id] ?? 0) && (
           <p className="text-xs text-muted-foreground">
-            Previsto: {formatMoney(projected[a.id], a.currency, loc)}
+            Previsto: {formatMoney(projected[a.id] ?? 0, a.currency, loc)}
           </p>
         )}
       </div>
