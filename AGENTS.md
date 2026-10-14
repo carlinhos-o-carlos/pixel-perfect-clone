@@ -16,3 +16,4 @@
 - Schema changes add a new Dexie `version(n)` with a tested upgrade; never edit an existing version — protects stored user data.
 - Category kind maps 1:1 to transaction type (income/expense/transfer); transfers never count as income/expense.
 - Phased delivery: each phase needs explicit user approval before the next.
+- Recurring occurrences are calculated forecasts and are persisted only when confirmed or individually edited — prevents duplicate rows and writes during rendering.

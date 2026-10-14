@@ -115,12 +115,14 @@ export function projectOccurrences(
   );
   const skippedKeys = new Set(skipped.map((s) => `${s.recurringRuleId}:${s.occurrenceDate}`));
   const out: RecurringOccurrence[] = [];
+  const included = new Set<string>();
   for (const rule of rules) {
     if (!rule.active || rule.endedAt) continue;
     for (const occurrenceDate of occurrenceDates(rule, from, to)) {
       const key = `${rule.id}:${occurrenceDate}`;
       if (skippedKeys.has(key)) continue;
       const tx = stored.get(key);
+      included.add(key);
       out.push({
         recurringRuleId: rule.id,
         occurrenceDate,
@@ -135,6 +137,28 @@ export function projectOccurrences(
         transaction: tx,
       });
     }
+  }
+  // An individually edited occurrence remains visible even when a later rule
+  // edit moves the generated schedule away from its original date.
+  for (const tx of transactions) {
+    if (!tx.recurringRuleId || !tx.occurrenceDate || tx.date < from || tx.date > to) continue;
+    const key = `${tx.recurringRuleId}:${tx.occurrenceDate}`;
+    if (included.has(key) || skippedKeys.has(key)) continue;
+    const rule = rules.find((item) => item.id === tx.recurringRuleId);
+    if (!rule || (tx.type !== "income" && tx.type !== "expense") || !tx.categoryId) continue;
+    out.push({
+      recurringRuleId: rule.id,
+      occurrenceDate: tx.occurrenceDate,
+      date: tx.date,
+      type: tx.type,
+      amount: tx.amount,
+      currency: tx.currency,
+      accountId: tx.accountId,
+      categoryId: tx.categoryId,
+      description: tx.description,
+      notes: tx.notes,
+      transaction: tx,
+    });
   }
   return out.sort((a, b) => a.date.localeCompare(b.date));
 }
