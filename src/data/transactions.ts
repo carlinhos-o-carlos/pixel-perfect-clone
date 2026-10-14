@@ -13,6 +13,12 @@ function clean(d: TransactionDraft): TransactionDraft {
   };
 }
 
+/** Drop undefined keys so stored rows never carry empty optional fields. */
+function row(o: Record<string, unknown>): Transaction {
+  for (const k of Object.keys(o)) if (o[k] === undefined) delete o[k];
+  return o as unknown as Transaction;
+}
+
 /** A transfer is stored as ONE row with source and destination, never two rows. */
 export async function createTransaction(
   draft: TransactionDraft,
@@ -27,7 +33,7 @@ export async function createTransaction(
     assertValid(validateTransaction(d, accounts, categories));
     const currency = accounts.find((a) => a.id === d.accountId)!.currency;
     const now = new Date().toISOString();
-    const tx: Transaction = { id: newId(), ...d, currency, createdAt: now, updatedAt: now };
+    const tx = row({ id: newId(), ...d, currency, createdAt: now, updatedAt: now });
     await db.transactions.add(tx);
     return tx;
   });
@@ -51,7 +57,7 @@ export async function updateTransaction(
     assertValid(validateTransaction(d, accounts, categories, prev));
     const currency = accounts.find((a) => a.id === d.accountId)!.currency;
     // Rebuild from the draft so fields dropped by a type change (e.g. destination) disappear.
-    const next: Transaction = {
+    const next = row({
       id: prev.id,
       createdAt: prev.createdAt,
       recurringRuleId: prev.recurringRuleId,
@@ -59,7 +65,7 @@ export async function updateTransaction(
       ...d,
       currency,
       updatedAt: new Date().toISOString(),
-    };
+    });
     await db.transactions.put(next);
     return next;
   });
