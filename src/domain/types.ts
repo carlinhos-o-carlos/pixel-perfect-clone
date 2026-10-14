@@ -60,7 +60,7 @@ export interface Transaction extends Audit {
   feesAmount?: Cents;
 }
 
-export type Frequency = "weekly" | "monthly" | "yearly";
+export type Frequency = "weekly" | "biweekly" | "monthly" | "yearly";
 
 export interface RecurringRule extends Audit {
   name: string;
@@ -76,7 +76,10 @@ export interface RecurringRule extends Audit {
   weekday?: number;
   startDate: ISODate;
   endDate?: ISODate;
+  notes?: string;
   active: boolean;
+  /** Set only when permanently ended; inactive without this value means paused. */
+  endedAt?: ISOTimestamp;
 }
 
 /** Marker for a skipped recurring occurrence (same key as a transaction). */
