@@ -4,7 +4,11 @@ import { formatMoney } from "@/domain/money";
 import type { Account, Category, Transaction } from "@/domain/types";
 import { cn } from "@/lib/utils";
 
-const dateFmt = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" });
+const dateFmt = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "short",
+  timeZone: "UTC",
+});
 
 export function TransactionRow({
   tx,
@@ -22,14 +26,22 @@ export function TransactionRow({
   onClick: () => void;
 }) {
   const state = effectiveState(tx, today);
-  const Icon = tx.type === "income" ? ArrowDownLeft : tx.type === "transfer" ? ArrowLeftRight : ArrowUpRight;
+  const Icon =
+    tx.type === "income" ? ArrowDownLeft : tx.type === "transfer" ? ArrowLeftRight : ArrowUpRight;
   const acc = accounts.get(tx.accountId)?.name ?? "—";
   const dest = tx.destinationAccountId ? accounts.get(tx.destinationAccountId)?.name : undefined;
   const cat = tx.categoryId ? categories.get(tx.categoryId)?.name : undefined;
   const sign = tx.type === "income" ? "+" : tx.type === "expense" ? "−" : "";
   return (
     <li>
-      <button type="button" onClick={onClick} className={cn("flex min-h-16 w-full items-center gap-3 px-4 py-2 text-left hover:bg-muted", state !== "actual" && "opacity-80")}>
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn(
+          "flex min-h-16 w-full items-center gap-3 px-4 py-2 text-left hover:bg-muted",
+          state !== "actual" && "opacity-80",
+        )}
+      >
         <span
           className={cn(
             "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
@@ -60,7 +72,14 @@ export function TransactionRow({
             {formatMoney(tx.amount, tx.currency, locale)}
           </span>
           {state !== "actual" && (
-            <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", state === "planned" ? "bg-planned/15 text-planned" : "bg-scheduled/15 text-scheduled")}>
+            <span
+              className={cn(
+                "rounded-full px-2 py-0.5 text-[11px] font-medium",
+                state === "planned"
+                  ? "bg-planned/15 text-planned"
+                  : "bg-scheduled/15 text-scheduled",
+              )}
+            >
               {EFFECTIVE_STATE_LABEL[state]}
             </span>
           )}

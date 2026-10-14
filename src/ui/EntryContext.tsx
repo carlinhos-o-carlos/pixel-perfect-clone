@@ -1,8 +1,22 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { Link } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,7 +37,9 @@ const Ctx = createContext<EntryCtx>({ openEntry: () => {} });
 export const useEntry = () => useContext(Ctx);
 
 export function EntryProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<{ open: boolean; tx?: Transaction }>({ open: false });
+  const [state, setState] = useState<{ open: boolean; tx?: Transaction | undefined }>({
+    open: false,
+  });
   const openEntry = useCallback((tx?: Transaction) => setState({ open: true, tx }), []);
   const value = useMemo(() => ({ openEntry }), [openEntry]);
   return (
@@ -33,7 +49,9 @@ export function EntryProvider({ children }: { children: ReactNode }) {
         <DialogContent className="max-h-[92vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{state.tx ? "Editar lançamento" : "Novo lançamento"}</DialogTitle>
-            <DialogDescription>Receita, despesa ou transferência entre suas contas.</DialogDescription>
+            <DialogDescription>
+              Receita, despesa ou transferência entre suas contas.
+            </DialogDescription>
           </DialogHeader>
           {state.open && <EntryForm tx={state.tx} onDone={() => setState({ open: false })} />}
         </DialogContent>
@@ -44,13 +62,15 @@ export function EntryProvider({ children }: { children: ReactNode }) {
 
 const TYPES: EntryType[] = ["expense", "income", "transfer"];
 
-function EntryForm({ tx, onDone }: { tx?: Transaction; onDone: () => void }) {
+function EntryForm({ tx, onDone }: { tx?: Transaction | undefined; onDone: () => void }) {
   const accounts = useLiveQuery(() => getDb().accounts.toArray(), []);
   const categories = useLiveQuery(() => getDb().categories.toArray(), []);
   const [type, setType] = useState<EntryType>((tx?.type as EntryType) ?? "expense");
   const [status, setStatus] = useState<TransactionStatus>(tx?.status ?? "confirmed");
   const [date, setDate] = useState(tx?.date ?? todayISO());
-  const [amount, setAmount] = useState(tx ? centsToInput(tx.amount, currencyDigits(tx.currency)) : "");
+  const [amount, setAmount] = useState(
+    tx ? centsToInput(tx.amount, currencyDigits(tx.currency)) : "",
+  );
   const [accountId, setAccountId] = useState(tx?.accountId ?? "");
   const [destId, setDestId] = useState(tx?.destinationAccountId ?? "");
   const [categoryId, setCategoryId] = useState(tx?.categoryId ?? "");
@@ -71,7 +91,7 @@ function EntryForm({ tx, onDone }: { tx?: Transaction; onDone: () => void }) {
     .sort((a, b) => a.sortOrder - b.sortOrder);
 
   useEffect(() => {
-    if (!accountId && usable.length) setAccountId(usable[0].id);
+    if (!accountId && usable.length) setAccountId(usable[0]!.id);
   }, [accountId, usable]);
   useEffect(() => {
     if (categoryId && categories && !cats.some((c) => c.id === categoryId)) setCategoryId("");
@@ -129,7 +149,11 @@ function EntryForm({ tx, onDone }: { tx?: Transaction; onDone: () => void }) {
 
   return (
     <form onSubmit={submit} className="grid gap-4">
-      <div role="radiogroup" aria-label="Tipo" className="grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">
+      <div
+        role="radiogroup"
+        aria-label="Tipo"
+        className="grid grid-cols-3 gap-1 rounded-xl bg-muted p-1"
+      >
         {TYPES.map((t) => (
           <button
             key={t}
@@ -151,46 +175,84 @@ function EntryForm({ tx, onDone }: { tx?: Transaction; onDone: () => void }) {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <Field label={`Valor${source ? ` (${source.currency})` : ""}`} htmlFor="tx-amount">
-          <Input id="tx-amount" inputMode="decimal" placeholder="0,00" value={amount} onChange={(e) => setAmount(e.target.value)} autoFocus={!tx} />
+          <Input
+            id="tx-amount"
+            inputMode="decimal"
+            placeholder="0,00"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            autoFocus={!tx}
+          />
         </Field>
         <Field label="Data" htmlFor="tx-date">
           <Input id="tx-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </Field>
       </div>
       <Field label="Descrição" htmlFor="tx-desc">
-        <Input id="tx-desc" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={120} />
+        <Input
+          id="tx-desc"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          maxLength={120}
+        />
       </Field>
       <div className={cn("grid gap-3", type === "transfer" && "grid-cols-2")}>
         <Field label={type === "transfer" ? "De" : "Conta"} htmlFor="tx-acc">
-          <select id="tx-acc" className={selectClass} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+          <select
+            id="tx-acc"
+            className={selectClass}
+            value={accountId}
+            onChange={(e) => setAccountId(e.target.value)}
+          >
             {usable.map((a) => (
-              <option key={a.id} value={a.id}>{a.name} ({a.currency})</option>
+              <option key={a.id} value={a.id}>
+                {a.name} ({a.currency})
+              </option>
             ))}
           </select>
         </Field>
         {type === "transfer" && (
           <Field label="Para" htmlFor="tx-dest">
-            <select id="tx-dest" className={selectClass} value={destId} onChange={(e) => setDestId(e.target.value)}>
+            <select
+              id="tx-dest"
+              className={selectClass}
+              value={destId}
+              onChange={(e) => setDestId(e.target.value)}
+            >
               <option value="">Selecione…</option>
               {usable
                 .filter((a) => a.id !== accountId && a.currency === source?.currency)
                 .map((a) => (
-                  <option key={a.id} value={a.id}>{a.name}</option>
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                  </option>
                 ))}
             </select>
           </Field>
         )}
       </div>
       <Field label={type === "transfer" ? "Finalidade (opcional)" : "Categoria"} htmlFor="tx-cat">
-        <select id="tx-cat" className={selectClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+        <select
+          id="tx-cat"
+          className={selectClass}
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
+        >
           <option value="">{type === "transfer" ? "Sem finalidade" : "Selecione…"}</option>
           {cats.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
           ))}
         </select>
       </Field>
       <label className="flex min-h-11 items-center gap-3 rounded-lg border px-3 text-sm">
-        <input type="checkbox" className="h-4 w-4 accent-[var(--planned)]" checked={status === "planned"} onChange={(e) => setStatus(e.target.checked ? "planned" : "confirmed")} />
+        <input
+          type="checkbox"
+          className="h-4 w-4 accent-[var(--planned)]"
+          checked={status === "planned"}
+          onChange={(e) => setStatus(e.target.checked ? "planned" : "confirmed")}
+        />
         <span>
           <strong>Previsto</strong> — ainda não aconteceu; não altera o saldo realizado.
         </span>
@@ -203,7 +265,13 @@ function EntryForm({ tx, onDone }: { tx?: Transaction; onDone: () => void }) {
         {saving ? "Salvando…" : "Salvar"}
       </Button>
       {tx && (
-        <Button type="button" variant={confirmDelete ? "destructive" : "ghost"} className="h-11 text-destructive data-[c=true]:text-destructive-foreground" data-c={confirmDelete} onClick={() => (confirmDelete ? remove() : setConfirmDelete(true))}>
+        <Button
+          type="button"
+          variant={confirmDelete ? "destructive" : "ghost"}
+          className="h-11 text-destructive data-[c=true]:text-destructive-foreground"
+          data-c={confirmDelete}
+          onClick={() => (confirmDelete ? remove() : setConfirmDelete(true))}
+        >
           {confirmDelete ? "Confirmar exclusão" : "Excluir lançamento"}
         </Button>
       )}

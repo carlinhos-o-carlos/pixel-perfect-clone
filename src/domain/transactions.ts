@@ -18,10 +18,10 @@ export interface TransactionDraft {
   date: ISODate;
   amount: Cents;
   accountId: string;
-  destinationAccountId?: string;
-  categoryId?: string;
+  destinationAccountId?: string | undefined;
+  categoryId?: string | undefined;
   description: string;
-  notes?: string;
+  notes?: string | undefined;
 }
 
 /**
@@ -36,7 +36,8 @@ export function validateTransaction(
   previous?: Transaction,
 ): string[] {
   const errors: string[] = [];
-  if (!["income", "expense", "transfer"].includes(d.type)) errors.push("Tipo de lançamento inválido.");
+  if (!["income", "expense", "transfer"].includes(d.type))
+    errors.push("Tipo de lançamento inválido.");
   if (!["confirmed", "planned"].includes(d.status)) errors.push("Status inválido.");
   if (!Number.isSafeInteger(d.amount) || d.amount <= 0)
     errors.push("O valor precisa ser maior que zero.");
@@ -53,7 +54,8 @@ export function validateTransaction(
     const dest = accounts.find((a) => a.id === d.destinationAccountId);
     if (!dest) errors.push("Selecione a conta de destino.");
     else {
-      if (acc && dest.id === acc.id) errors.push("A conta de destino precisa ser diferente da origem.");
+      if (acc && dest.id === acc.id)
+        errors.push("A conta de destino precisa ser diferente da origem.");
       if (dest.archived && previous?.destinationAccountId !== dest.id)
         errors.push(`A conta "${dest.name}" está arquivada.`);
       if (acc && dest.currency !== acc.currency)
@@ -113,7 +115,8 @@ export function computeBalances(
   for (const tx of txs) {
     if (mode === "actual" && effectiveState(tx, today) !== "actual") continue;
     for (const [id, delta] of accountEffects(tx)) {
-      if (id in out) out[id] = addCents(out[id], delta);
+      const cur = out[id];
+      if (cur !== undefined) out[id] = addCents(cur, delta);
     }
   }
   return out;
@@ -154,9 +157,9 @@ export function monthSummary(
 }
 
 export interface TransactionFilter {
-  month?: string; // "YYYY-MM"
-  type?: EntryType;
-  accountId?: string;
+  month?: string | undefined; // "YYYY-MM"
+  type?: EntryType | undefined;
+  accountId?: string | undefined;
 }
 
 /** Filter and sort newest first. An account filter matches source or destination. */
@@ -168,5 +171,7 @@ export function filterTransactions(txs: Transaction[], f: TransactionFilter): Tr
         (!f.type || t.type === f.type) &&
         (!f.accountId || t.accountId === f.accountId || t.destinationAccountId === f.accountId),
     )
-    .sort((a, b) => (a.date === b.date ? b.createdAt.localeCompare(a.createdAt) : b.date.localeCompare(a.date)));
+    .sort((a, b) =>
+      a.date === b.date ? b.createdAt.localeCompare(a.createdAt) : b.date.localeCompare(a.date),
+    );
 }

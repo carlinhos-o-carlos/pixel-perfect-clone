@@ -7,7 +7,10 @@ function nameErrors(name: string, kind: CategoryKind, all: Category[], selfId?: 
   if (!n) return ["Informe o nome da categoria."];
   if (n.length > 40) return ["O nome pode ter no máximo 40 caracteres."];
   const dup = all.some(
-    (c) => c.id !== selfId && c.kind === kind && c.name.trim().toLocaleLowerCase("pt-BR") === n.toLocaleLowerCase("pt-BR"),
+    (c) =>
+      c.id !== selfId &&
+      c.kind === kind &&
+      c.name.trim().toLocaleLowerCase("pt-BR") === n.toLocaleLowerCase("pt-BR"),
   );
   return dup ? ["Já existe uma categoria com esse nome."] : [];
 }
@@ -58,7 +61,8 @@ export async function deleteCategory(id: string, db: FinanceDB = getDb()) {
   await db.transaction("rw", db.categories, db.transactions, async () => {
     const cat = await db.categories.get(id);
     if (!cat) throw new ValidationError(["Categoria não encontrada."]);
-    if (cat.system) throw new ValidationError(["Categorias do sistema não podem ser excluídas. Arquive-a."]);
+    if (cat.system)
+      throw new ValidationError(["Categorias do sistema não podem ser excluídas. Arquive-a."]);
     if ((await db.transactions.where("categoryId").equals(id).count()) > 0)
       throw new ValidationError(["Esta categoria tem lançamentos. Arquive-a em vez de excluir."]);
     await db.categories.delete(id);

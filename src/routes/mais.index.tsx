@@ -3,7 +3,6 @@ import { ChevronRight } from "lucide-react";
 import { PageHeader, PhaseBadge } from "@/ui/Page";
 
 const SOON = [
-  { title: "Contas", phase: 2 },
   { title: "Patrimônio", phase: 5 },
   { title: "Dívidas", phase: 5 },
   { title: "Objetivos", phase: 5 },
@@ -30,6 +29,7 @@ export const Route = createFileRoute("/mais/")({
       <div className="divide-y overflow-hidden rounded-2xl border bg-card shadow-soft">
         {(
           [
+            { to: "/mais/contas", title: "Contas" },
             { to: "/mais/categorias", title: "Categorias" },
             { to: "/mais/configuracoes", title: "Configurações" },
           ] as const

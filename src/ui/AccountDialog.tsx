@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ACCOUNT_KIND_LABEL, SUPPORTED_CURRENCIES } from "@/domain/accounts";
@@ -17,7 +23,7 @@ export function AccountDialog({
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
-  account?: Account;
+  account?: Account | undefined;
   defaultCurrency: string;
 }) {
   const [name, setName] = useState("");
@@ -32,7 +38,9 @@ export function AccountDialog({
     setName(account?.name ?? "");
     setKind(account?.kind ?? "checking");
     setCurrency(account?.currency ?? defaultCurrency);
-    setOpening(account ? centsToInput(account.openingBalance, currencyDigits(account.currency)) : "0");
+    setOpening(
+      account ? centsToInput(account.openingBalance, currencyDigits(account.currency)) : "0",
+    );
     setErrors([]);
   }, [open, account, defaultCurrency]);
 
@@ -54,7 +62,9 @@ export function AccountDialog({
     }
   }
 
-  const currencies = SUPPORTED_CURRENCIES.includes(currency) ? SUPPORTED_CURRENCIES : [currency, ...SUPPORTED_CURRENCIES];
+  const currencies = SUPPORTED_CURRENCIES.includes(currency)
+    ? SUPPORTED_CURRENCIES
+    : [currency, ...SUPPORTED_CURRENCIES];
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -66,26 +76,52 @@ export function AccountDialog({
         </DialogHeader>
         <form onSubmit={submit} className="grid gap-4">
           <Field label="Nome" htmlFor="acc-name">
-            <Input id="acc-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} autoFocus />
+            <Input
+              id="acc-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={60}
+              autoFocus
+            />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Tipo" htmlFor="acc-kind">
-              <select id="acc-kind" className={selectClass} value={kind} onChange={(e) => setKind(e.target.value as AccountKind)}>
+              <select
+                id="acc-kind"
+                className={selectClass}
+                value={kind}
+                onChange={(e) => setKind(e.target.value as AccountKind)}
+              >
                 {Object.entries(ACCOUNT_KIND_LABEL).map(([k, l]) => (
-                  <option key={k} value={k}>{l}</option>
+                  <option key={k} value={k}>
+                    {l}
+                  </option>
                 ))}
               </select>
             </Field>
             <Field label="Moeda" htmlFor="acc-cur">
-              <select id="acc-cur" className={selectClass} value={currency} onChange={(e) => setCurrency(e.target.value)}>
+              <select
+                id="acc-cur"
+                className={selectClass}
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+              >
                 {currencies.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
                 ))}
               </select>
             </Field>
           </div>
           <Field label="Saldo inicial" htmlFor="acc-open">
-            <Input id="acc-open" inputMode="decimal" value={opening} onChange={(e) => setOpening(e.target.value)} placeholder="0,00" />
+            <Input
+              id="acc-open"
+              inputMode="decimal"
+              value={opening}
+              onChange={(e) => setOpening(e.target.value)}
+              placeholder="0,00"
+            />
           </Field>
           <ErrorList errors={errors} />
           <Button type="submit" disabled={saving} className="h-11">
