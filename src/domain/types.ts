@@ -47,8 +47,8 @@ export interface Transaction extends Audit {
   amount: Cents;
   currency: CurrencyCode;
   accountId: string;
-  destinationAccountId?: string;
-  categoryId?: string;
+  destinationAccountId?: string | undefined;
+  categoryId?: string | undefined;
   description: string;
   notes?: string;
   recurringRuleId?: string;
@@ -72,14 +72,14 @@ export interface RecurringRule extends Audit {
   categoryId?: string;
   frequency: Frequency;
   interval: number;
-  dayOfMonth?: number;
-  weekday?: number;
+  dayOfMonth?: number | undefined;
+  weekday?: number | undefined;
   startDate: ISODate;
-  endDate?: ISODate;
-  notes?: string;
+  endDate?: ISODate | undefined;
+  notes?: string | undefined;
   active: boolean;
   /** Set only when permanently ended; inactive without this value means paused. */
-  endedAt?: ISOTimestamp;
+  endedAt?: ISOTimestamp | undefined;
 }
 
 /** Marker for a skipped recurring occurrence (same key as a transaction). */

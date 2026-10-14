@@ -96,8 +96,8 @@ export interface RecurringOccurrence {
   accountId: string;
   categoryId: string;
   description: string;
-  notes?: string;
-  transaction?: Transaction;
+  notes?: string | undefined;
+  transaction?: Transaction | undefined;
 }
 
 /** Merge calculated forecasts with individually edited/confirmed stored rows. */
