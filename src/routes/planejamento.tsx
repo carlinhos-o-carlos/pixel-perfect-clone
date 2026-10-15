@@ -6,9 +6,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { getDb } from "@/data/db";
 import { endRecurringRule, saveOccurrence, setRecurringRuleActive } from "@/data/recurring";
-import { todayISO } from "@/domain/dates";
+import { todayISO, effectiveState, EFFECTIVE_STATE_LABEL } from "@/domain/dates";
 import { formatMoney } from "@/domain/money";
-import { FREQUENCY_LABEL, projectOccurrences, type RecurringOccurrence } from "@/domain/recurring";
+import { FREQUENCY_LABEL, futureWindowEnd, projectOccurrences, type RecurringOccurrence } from "@/domain/recurring";
+import { Input } from "@/components/ui/input";
 import type { RecurringRule } from "@/domain/types";
 import { useEntry } from "@/ui/EntryContext";
 import { EmptyState, PageHeader, PhaseBadge } from "@/ui/Page";
@@ -29,14 +30,11 @@ export const Route = createFileRoute("/planejamento")({
   component: Planejamento,
 });
 
-function addMonths(date: string, count: number): string {
-  const d = new Date(`${date}T00:00:00Z`);
-  d.setUTCMonth(d.getUTCMonth() + count);
-  return d.toISOString().slice(0, 10);
-}
-
 function Planejamento() {
-  const { openEntry } = useEntry();
+  const { openEntry, openOccurrence } = useEntry();
+  const [from, setFrom] = useState(todayISO());
+  const [ending, setEnding] = useState<RecurringRule | null>(null);
+  const [limit, setLimit] = useState(12);
   const [dialog, setDialog] = useState<{ open: boolean; rule?: RecurringRule | undefined }>({
     open: false,
   });
@@ -48,7 +46,6 @@ function Planejamento() {
       db.skippedOccurrences.toArray(),
       db.accounts.toArray(),
     ]);
-    const today = todayISO();
     return {
       rules: rules.sort(
         (a, b) => Number(b.active) - Number(a.active) || a.name.localeCompare(b.name, "pt-BR"),
@@ -57,12 +54,12 @@ function Planejamento() {
         rules,
         transactions,
         skipped,
-        today,
-        addMonths(today, 3),
-      ).slice(0, 12),
+        from,
+        futureWindowEnd(from),
+      ),
       accounts,
     };
-  }, []);
+  }, [from]);
 
   async function act(action: () => Promise<unknown>, message: string) {
     try {
@@ -74,19 +71,15 @@ function Planejamento() {
   }
 
   async function editOccurrence(occurrence: RecurringOccurrence) {
-    try {
-      const transaction = occurrence.transaction ?? (await saveOccurrence(occurrence, "planned"));
-      openEntry(transaction);
-    } catch (error) {
-      toast.error(errorMessages(error).join(" "));
-    }
+    if (occurrence.transaction) openEntry(occurrence.transaction);
+    else openOccurrence(occurrence);
   }
 
   return (
     <>
       <div className="mb-6 flex items-start justify-between gap-3">
         <PageHeader title="Planejamento" subtitle="Organize receitas e despesas que se repetem." />
-        <Button onClick={() => setDialog({ open: true })}>
+        <Button aria-label="Nova recorrência" onClick={() => setDialog({ open: true })}>
           <Plus />
           Nova
         </Button>
@@ -108,16 +101,12 @@ function Planejamento() {
                   const status = rule.endedAt ? "Encerrada" : rule.active ? "Ativa" : "Pausada";
                   return (
                     <li key={rule.id} className="flex flex-wrap items-center gap-3 p-4">
-                      <button
-                        type="button"
-                        className="min-w-0 flex-1 text-left"
-                        onClick={() => !rule.endedAt && setDialog({ open: true, rule })}
-                      >
+                      <div className="min-w-0 basis-full sm:basis-auto sm:flex-1">
                         <span className="block truncate font-semibold">{rule.name}</span>
                         <span className="block text-xs text-muted-foreground">
                           {FREQUENCY_LABEL[rule.frequency]} · {account?.name ?? "—"} · {status}
                         </span>
-                      </button>
+                      </div>
                       <span
                         className={
                           rule.type === "income"
@@ -158,12 +147,7 @@ function Planejamento() {
                             className="text-destructive"
                             title="Encerrar"
                             aria-label={`Encerrar ${rule.name}`}
-                            onClick={() =>
-                              act(
-                                () => endRecurringRule(rule.id, todayISO()),
-                                "Recorrência encerrada",
-                              )
-                            }
+                            onClick={() => setEnding(rule)}
                           >
                             <StopCircle />
                           </Button>
@@ -177,19 +161,21 @@ function Planejamento() {
           </section>
           <section>
             <h2 className="mb-1 text-xl font-semibold">Próximas ocorrências</h2>
-            <p className="mb-3 text-sm text-muted-foreground">
-              Janela dos próximos três meses. Previstas não alteram o saldo.
-            </p>
+            <div className="mb-3 flex flex-wrap items-center gap-3">
+              <label htmlFor="occ-from" className="text-sm text-muted-foreground">A partir de</label>
+              <Input id="occ-from" className="w-auto" type="date" value={from} onChange={(e) => { if(e.target.value) {setFrom(e.target.value); setLimit(12);} }} />
+              <span className="text-xs text-muted-foreground">Até {futureWindowEnd(from).split("-").reverse().join("/")}</span>
+            </div>
             {!data.occurrences.length ? (
               <p className="text-sm text-muted-foreground">Nenhuma ocorrência prevista.</p>
             ) : (
               <ul className="divide-y overflow-hidden rounded-lg border bg-card shadow-soft">
-                {data.occurrences.map((occurrence) => (
+                {data.occurrences.slice(0, limit).map((occurrence) => (
                   <li
                     key={`${occurrence.recurringRuleId}:${occurrence.occurrenceDate}`}
                     className="flex flex-wrap items-center gap-3 p-4"
                   >
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 basis-full sm:basis-auto sm:flex-1">
                       <p className="truncate font-medium">{occurrence.description}</p>
                       <p className="text-xs text-muted-foreground">
                         {new Intl.DateTimeFormat("pt-BR", {
@@ -197,11 +183,8 @@ function Planejamento() {
                           timeZone: "UTC",
                         }).format(new Date(`${occurrence.date}T00:00:00Z`))}{" "}
                         ·{" "}
-                        {occurrence.transaction?.status === "confirmed"
-                          ? "Confirmado"
-                          : occurrence.transaction
-                            ? "Editado"
-                            : "Previsto"}
+                        {occurrence.transaction ? EFFECTIVE_STATE_LABEL[effectiveState(occurrence.transaction, todayISO())] : "Previsto"}
+                        {occurrence.transaction?.status === "planned" && " · Editado"}
                       </p>
                     </div>
                     <span
@@ -241,6 +224,7 @@ function Planejamento() {
                 ))}
               </ul>
             )}
+            {data.occurrences.length > limit && <Button variant="ghost" className="mt-3" onClick={() => setLimit((n) => n+12)}>Mostrar mais</Button>}
           </section>
           <section className="grid gap-3 sm:grid-cols-2">
             {[
@@ -266,6 +250,13 @@ function Planejamento() {
         rule={dialog.rule}
         onOpenChange={(open) => setDialog((state) => ({ ...state, open }))}
       />
+      {ending && <div role="alertdialog" aria-label="Encerrar recorrência" className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 p-4">
+        <div className="w-full max-w-sm rounded-lg border bg-card p-6 shadow-soft">
+          <h2 className="text-xl font-semibold">Encerrar {ending.name}?</h2>
+          <p className="mt-2 text-sm text-muted-foreground">O histórico e as ocorrências editadas serão preservados. Esta regra não poderá ser retomada.</p>
+          <div className="mt-4 flex gap-2"><Button variant="outline" onClick={() => setEnding(null)}>Cancelar</Button><Button variant="destructive" onClick={() => act(async () => {await endRecurringRule(ending.id, todayISO()); setEnding(null);}, "Recorrência encerrada")}>Confirmar encerramento</Button></div>
+        </div>
+      </div>}
     </>
   );
 }

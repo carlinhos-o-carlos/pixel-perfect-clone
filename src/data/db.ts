@@ -52,6 +52,8 @@ export class FinanceDB extends Dexie {
     this.version(2).stores({
       transactions:
         "id, date, type, status, accountId, destinationAccountId, categoryId, debtId, &[recurringRuleId+occurrenceDate]",
+    }).upgrade(async (tx) => {
+      await tx.table("settings").modify({schemaVersion: 2});
     });
     this.on("populate", (tx) => seedInitialData(tx.table("categories"), tx.table("settings")));
   }
