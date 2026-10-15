@@ -72,7 +72,10 @@ export function occurrenceDates(
   if (rule.frequency === "monthly") {
     const interval = Math.max(1, rule.interval);
     const lowerDate = utc(lower);
-    const diff = (lowerDate.getUTCFullYear() - start.getUTCFullYear()) * 12 + lowerDate.getUTCMonth() - start.getUTCMonth();
+    const diff =
+      (lowerDate.getUTCFullYear() - start.getUTCFullYear()) * 12 +
+      lowerDate.getUTCMonth() -
+      start.getUTCMonth();
     let index = Math.max(0, Math.floor(diff / interval));
     while (true) {
       const monthIndex = start.getUTCMonth() + index * interval;
@@ -89,7 +92,10 @@ export function occurrenceDates(
   }
 
   const interval = Math.max(1, rule.interval);
-  let year = start.getUTCFullYear() + Math.max(0, Math.floor((utc(lower).getUTCFullYear() - start.getUTCFullYear()) / interval)) * interval;
+  let year =
+    start.getUTCFullYear() +
+    Math.max(0, Math.floor((utc(lower).getUTCFullYear() - start.getUTCFullYear()) / interval)) *
+      interval;
   while (true) {
     const candidate = monthCandidate(year, start.getUTCMonth(), day);
     if (candidate > upper) break;
@@ -134,28 +140,32 @@ export function projectOccurrences(
     const versions = [...(rule.revisions ?? []), { until: to, template: rule }];
     let after = "";
     for (const version of versions) {
-    const template = version.template;
-    for (const occurrenceDate of occurrenceDates(template, from, to < version.until ? to : version.until)) {
-      if (occurrenceDate <= after) continue;
-      const key = `${rule.id}:${occurrenceDate}`;
-      if (skippedKeys.has(key)) continue;
-      const tx = stored.get(key);
-      included.add(key);
-      out.push({
-        recurringRuleId: rule.id,
-        occurrenceDate,
-        date: tx?.date ?? occurrenceDate,
-        type: tx?.type === "income" || tx?.type === "expense" ? tx.type : template.type,
-        amount: tx?.amount ?? template.amount,
-        currency: tx?.currency ?? template.currency,
-        accountId: tx?.accountId ?? template.accountId,
-        categoryId: tx?.categoryId ?? template.categoryId ?? "",
-        description: tx?.description ?? template.name,
-        notes: tx ? tx.notes : template.notes,
-        transaction: tx,
-      });
-    }
-    after = version.until;
+      const template = version.template;
+      for (const occurrenceDate of occurrenceDates(
+        template,
+        from,
+        to < version.until ? to : version.until,
+      )) {
+        if (occurrenceDate <= after) continue;
+        const key = `${rule.id}:${occurrenceDate}`;
+        if (skippedKeys.has(key)) continue;
+        const tx = stored.get(key);
+        included.add(key);
+        out.push({
+          recurringRuleId: rule.id,
+          occurrenceDate,
+          date: tx?.date ?? occurrenceDate,
+          type: tx?.type === "income" || tx?.type === "expense" ? tx.type : template.type,
+          amount: tx?.amount ?? template.amount,
+          currency: tx?.currency ?? template.currency,
+          accountId: tx?.accountId ?? template.accountId,
+          categoryId: tx?.categoryId ?? template.categoryId ?? "",
+          description: tx?.description ?? template.name,
+          notes: tx ? tx.notes : template.notes,
+          transaction: tx,
+        });
+      }
+      after = version.until;
     }
   }
   // An individually edited occurrence remains visible even when a later rule

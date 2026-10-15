@@ -1,7 +1,12 @@
 import { getDb, newId, type FinanceDB } from "./db";
 import { assertValid, ValidationError } from "@/domain/errors";
 import { isCategoryCompatible } from "@/domain/categories";
-import { isISODate, projectOccurrences, shiftDays, type RecurringOccurrence } from "@/domain/recurring";
+import {
+  isISODate,
+  projectOccurrences,
+  shiftDays,
+  type RecurringOccurrence,
+} from "@/domain/recurring";
 import { todayISO } from "@/domain/dates";
 import { validateTransaction } from "@/domain/transactions";
 import type { Frequency, RecurringRule, Transaction, TransactionStatus } from "@/domain/types";
@@ -113,9 +118,12 @@ export async function updateRecurringRule(
       throw new ValidationError(["Uma recorrência encerrada não pode ser alterada."]);
     const clean = await validatedRule(draft, db, previous);
     const { revisions, ...template } = previous;
-    const next: RecurringRule = { ...previous, ...clean,
+    const next: RecurringRule = {
+      ...previous,
+      ...clean,
       revisions: [...(revisions ?? []), { until: shiftDays(today, -1), template }],
-      updatedAt: new Date().toISOString() };
+      updatedAt: new Date().toISOString(),
+    };
     await db.recurringRules.put(next);
     return next;
   });
@@ -146,46 +154,77 @@ export async function saveOccurrence(
   status: TransactionStatus,
   db: FinanceDB = getDb(),
 ): Promise<Transaction> {
-  return db.transaction("rw", db.transactions, db.accounts, db.categories, db.recurringRules, db.skippedOccurrences, async () => {
-    if (!["planned", "confirmed"].includes(status)) throw new ValidationError(["Status inválido."]);
-    const existing = await db.transactions
-      .where("[recurringRuleId+occurrenceDate]")
-      .equals([occurrence.recurringRuleId, occurrence.occurrenceDate])
-      .first();
-    if (existing) {
-      if (existing.status === "confirmed") return existing;
-      const [accounts, categories] = await Promise.all([db.accounts.toArray(), db.categories.toArray()]);
-      assertValid(validateTransaction({ ...existing, type: existing.type as "income" | "expense", status }, accounts, categories, existing));
-      const next = { ...existing, status, updatedAt: new Date().toISOString() };
-      await db.transactions.put(next);
-      return next;
-    }
-    const rule = await db.recurringRules.get(occurrence.recurringRuleId);
-    if (!rule?.active || rule.endedAt) throw new ValidationError(["Esta recorrência está pausada ou encerrada."]);
-    const forecasts = projectOccurrences([rule], [], await db.skippedOccurrences.toArray(), occurrence.occurrenceDate, occurrence.occurrenceDate);
-    if (!forecasts.length) throw new ValidationError(["Esta ocorrência não faz mais parte da recorrência."]);
-    const [accounts, categories] = await Promise.all([db.accounts.toArray(), db.categories.toArray()]);
-    assertValid(validateTransaction({ ...occurrence, status }, accounts, categories));
-    const account = accounts.find((a) => a.id === occurrence.accountId);
-    if (!account || account.currency !== occurrence.currency) throw new ValidationError(["A moeda da conta foi alterada. Edite a recorrência."]);
-    const now = new Date().toISOString();
-    const tx: Transaction = {
-      id: newId(),
-      type: occurrence.type,
-      status,
-      date: occurrence.date,
-      amount: occurrence.amount,
-      currency: occurrence.currency,
-      accountId: occurrence.accountId,
-      categoryId: occurrence.categoryId,
-      description: occurrence.description,
-      ...(occurrence.notes ? { notes: occurrence.notes } : {}),
-      recurringRuleId: occurrence.recurringRuleId,
-      occurrenceDate: occurrence.occurrenceDate,
-      createdAt: now,
-      updatedAt: now,
-    };
-    await db.transactions.add(tx);
-    return tx;
-  });
+  return db.transaction(
+    "rw",
+    db.transactions,
+    db.accounts,
+    db.categories,
+    db.recurringRules,
+    db.skippedOccurrences,
+    async () => {
+      if (!["planned", "confirmed"].includes(status))
+        throw new ValidationError(["Status inválido."]);
+      const existing = await db.transactions
+        .where("[recurringRuleId+occurrenceDate]")
+        .equals([occurrence.recurringRuleId, occurrence.occurrenceDate])
+        .first();
+      if (existing) {
+        if (existing.status === "confirmed") return existing;
+        const [accounts, categories] = await Promise.all([
+          db.accounts.toArray(),
+          db.categories.toArray(),
+        ]);
+        assertValid(
+          validateTransaction(
+            { ...existing, type: existing.type as "income" | "expense", status },
+            accounts,
+            categories,
+            existing,
+          ),
+        );
+        const next = { ...existing, status, updatedAt: new Date().toISOString() };
+        await db.transactions.put(next);
+        return next;
+      }
+      const rule = await db.recurringRules.get(occurrence.recurringRuleId);
+      if (!rule?.active || rule.endedAt)
+        throw new ValidationError(["Esta recorrência está pausada ou encerrada."]);
+      const forecasts = projectOccurrences(
+        [rule],
+        [],
+        await db.skippedOccurrences.toArray(),
+        occurrence.occurrenceDate,
+        occurrence.occurrenceDate,
+      );
+      if (!forecasts.length)
+        throw new ValidationError(["Esta ocorrência não faz mais parte da recorrência."]);
+      const [accounts, categories] = await Promise.all([
+        db.accounts.toArray(),
+        db.categories.toArray(),
+      ]);
+      assertValid(validateTransaction({ ...occurrence, status }, accounts, categories));
+      const account = accounts.find((a) => a.id === occurrence.accountId);
+      if (!account || account.currency !== occurrence.currency)
+        throw new ValidationError(["A moeda da conta foi alterada. Edite a recorrência."]);
+      const now = new Date().toISOString();
+      const tx: Transaction = {
+        id: newId(),
+        type: occurrence.type,
+        status,
+        date: occurrence.date,
+        amount: occurrence.amount,
+        currency: occurrence.currency,
+        accountId: occurrence.accountId,
+        categoryId: occurrence.categoryId,
+        description: occurrence.description,
+        ...(occurrence.notes ? { notes: occurrence.notes } : {}),
+        recurringRuleId: occurrence.recurringRuleId,
+        occurrenceDate: occurrence.occurrenceDate,
+        createdAt: now,
+        updatedAt: now,
+      };
+      await db.transactions.add(tx);
+      return tx;
+    },
+  );
 }

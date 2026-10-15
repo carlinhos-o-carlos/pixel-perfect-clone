@@ -40,11 +40,18 @@ const Ctx = createContext<EntryCtx>({ openEntry: () => {}, openOccurrence: () =>
 export const useEntry = () => useContext(Ctx);
 
 export function EntryProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<{ open: boolean; tx?: Transaction | undefined; occurrence?: RecurringOccurrence | undefined }>({
+  const [state, setState] = useState<{
+    open: boolean;
+    tx?: Transaction | undefined;
+    occurrence?: RecurringOccurrence | undefined;
+  }>({
     open: false,
   });
   const openEntry = useCallback((tx?: Transaction) => setState({ open: true, tx }), []);
-  const openOccurrence = useCallback((occurrence: RecurringOccurrence) => setState({open: true, occurrence}), []);
+  const openOccurrence = useCallback(
+    (occurrence: RecurringOccurrence) => setState({ open: true, occurrence }),
+    [],
+  );
   const value = useMemo(() => ({ openEntry, openOccurrence }), [openEntry, openOccurrence]);
   return (
     <Ctx.Provider value={value}>
@@ -52,12 +59,32 @@ export function EntryProvider({ children }: { children: ReactNode }) {
       <Dialog open={state.open} onOpenChange={(open) => setState((s) => ({ ...s, open }))}>
         <DialogContent className="max-h-[92vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{state.tx || state.occurrence ? "Editar lançamento" : "Novo lançamento"}</DialogTitle>
+            <DialogTitle>
+              {state.tx || state.occurrence ? "Editar lançamento" : "Novo lançamento"}
+            </DialogTitle>
             <DialogDescription>
               Receita, despesa ou transferência entre suas contas.
             </DialogDescription>
           </DialogHeader>
-          {state.open && <EntryForm tx={state.tx ?? (state.occurrence ? { ...state.occurrence, id: "virtual", status: "planned", createdAt: "", updatedAt: "", ...(state.occurrence.notes ? {notes: state.occurrence.notes} : {}) } as Transaction : undefined)} occurrence={state.occurrence} onDone={() => setState({ open: false })} />}
+          {state.open && (
+            <EntryForm
+              tx={
+                state.tx ??
+                (state.occurrence
+                  ? ({
+                      ...state.occurrence,
+                      id: "virtual",
+                      status: "planned",
+                      createdAt: "",
+                      updatedAt: "",
+                      ...(state.occurrence.notes ? { notes: state.occurrence.notes } : {}),
+                    } as Transaction)
+                  : undefined)
+              }
+              occurrence={state.occurrence}
+              onDone={() => setState({ open: false })}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </Ctx.Provider>
@@ -66,7 +93,15 @@ export function EntryProvider({ children }: { children: ReactNode }) {
 
 const TYPES: EntryType[] = ["expense", "income", "transfer"];
 
-function EntryForm({ tx, occurrence, onDone }: { tx?: Transaction | undefined; occurrence?: RecurringOccurrence | undefined; onDone: () => void }) {
+function EntryForm({
+  tx,
+  occurrence,
+  onDone,
+}: {
+  tx?: Transaction | undefined;
+  occurrence?: RecurringOccurrence | undefined;
+  onDone: () => void;
+}) {
   const accounts = useLiveQuery(() => getDb().accounts.toArray(), []);
   const categories = useLiveQuery(() => getDb().categories.toArray(), []);
   const [type, setType] = useState<EntryType>((tx?.type as EntryType) ?? "expense");
@@ -131,9 +166,17 @@ function EntryForm({ tx, occurrence, onDone }: { tx?: Transaction | undefined; o
     try {
       if (occurrence) {
         if (type === "transfer") return setErrors(["Uma recorrência deve ser receita ou despesa."]);
-        await saveOccurrence({ ...occurrence, ...draft, type, currency: source?.currency ?? occurrence.currency, categoryId }, status);
-      }
-      else if (tx) await updateTransaction(tx.id, draft);
+        await saveOccurrence(
+          {
+            ...occurrence,
+            ...draft,
+            type,
+            currency: source?.currency ?? occurrence.currency,
+            categoryId,
+          },
+          status,
+        );
+      } else if (tx) await updateTransaction(tx.id, draft);
       else await createTransaction(draft);
       toast.success(tx ? "Lançamento atualizado" : "Lançamento salvo");
       onDone();

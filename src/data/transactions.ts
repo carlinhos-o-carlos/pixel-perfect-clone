@@ -81,8 +81,16 @@ export async function deleteTransaction(id: string, db: FinanceDB = getDb()) {
     const tx = await db.transactions.get(id);
     if (!tx) throw new ValidationError(["Lançamento não encontrado."]);
     if (tx.recurringRuleId && tx.occurrenceDate) {
-      const existing = await db.skippedOccurrences.where("[recurringRuleId+occurrenceDate]").equals([tx.recurringRuleId, tx.occurrenceDate]).first();
-      if (!existing) await db.skippedOccurrences.add({ id: newId(), recurringRuleId: tx.recurringRuleId, occurrenceDate: tx.occurrenceDate });
+      const existing = await db.skippedOccurrences
+        .where("[recurringRuleId+occurrenceDate]")
+        .equals([tx.recurringRuleId, tx.occurrenceDate])
+        .first();
+      if (!existing)
+        await db.skippedOccurrences.add({
+          id: newId(),
+          recurringRuleId: tx.recurringRuleId,
+          occurrenceDate: tx.occurrenceDate,
+        });
     }
     await db.transactions.delete(id);
   });

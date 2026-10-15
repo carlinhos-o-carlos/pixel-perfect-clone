@@ -49,12 +49,14 @@ export class FinanceDB extends Dexie {
     });
     // v2 makes each recurring occurrence unique. Keep v1 untouched so existing
     // browser databases are upgraded safely in place.
-    this.version(2).stores({
-      transactions:
-        "id, date, type, status, accountId, destinationAccountId, categoryId, debtId, &[recurringRuleId+occurrenceDate]",
-    }).upgrade(async (tx) => {
-      await tx.table("settings").modify({schemaVersion: 2});
-    });
+    this.version(2)
+      .stores({
+        transactions:
+          "id, date, type, status, accountId, destinationAccountId, categoryId, debtId, &[recurringRuleId+occurrenceDate]",
+      })
+      .upgrade(async (tx) => {
+        await tx.table("settings").modify({ schemaVersion: 2 });
+      });
     this.on("populate", (tx) => seedInitialData(tx.table("categories"), tx.table("settings")));
   }
 }

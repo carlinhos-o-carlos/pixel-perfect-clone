@@ -165,9 +165,16 @@ describe("persistência das recorrências", () => {
     const rule = await createRecurringRule(draft(), db);
     const occurrence = projectOccurrences([rule], [], [], "2026-02-01", "2026-02-28")[0];
     if (!occurrence) throw new Error("Ocorrência esperada");
-    await Promise.all([saveOccurrence(occurrence, "confirmed", db), saveOccurrence(occurrence, "confirmed", db)]);
+    await Promise.all([
+      saveOccurrence(occurrence, "confirmed", db),
+      saveOccurrence(occurrence, "confirmed", db),
+    ]);
     expect(await db.transactions.count()).toBe(1);
-    expect(computeBalances(await db.accounts.toArray(), await db.transactions.toArray(), "2026-02-01")[accountId]).toBe(10000);
+    expect(
+      computeBalances(await db.accounts.toArray(), await db.transactions.toArray(), "2026-02-01")[
+        accountId
+      ],
+    ).toBe(10000);
   });
 
   it("preserva datas passadas e histórico confirmado ao editar a regra", async () => {
@@ -175,22 +182,31 @@ describe("persistência das recorrências", () => {
     const occurrence = projectOccurrences([rule], [], [], "2026-01-01", "2026-01-31")[0];
     if (!occurrence) throw new Error("Ocorrência esperada");
     const tx = await saveOccurrence(occurrence, "confirmed", db);
-    const next = await updateRecurringRule(rule.id, draft({amount: 3000}), db, "2026-02-01");
+    const next = await updateRecurringRule(rule.id, draft({ amount: 3000 }), db, "2026-02-01");
     expect(await db.transactions.get(tx.id)).toEqual(tx);
     const virtual = projectOccurrences([next], [], [], "2026-01-01", "2026-03-31");
-    expect(virtual.map((o) => o.amount)).toEqual([2000,3000,3000]);
+    expect(virtual.map((o) => o.amount)).toEqual([2000, 3000, 3000]);
     expect(await saveOccurrence(occurrence, "planned", db)).toEqual(tx);
   });
 
   it("exclusão de ocorrência não regenera e encerramento preserva histórico", async () => {
     const rule = await createRecurringRule(draft(), db);
     const occurrences = projectOccurrences([rule], [], [], "2026-01-01", "2026-03-31");
-    const first = occurrences[0]; const second = occurrences[1];
+    const first = occurrences[0];
+    const second = occurrences[1];
     if (!first || !second) throw new Error("Ocorrências esperadas");
     const tx = await saveOccurrence(first, "confirmed", db);
     await saveOccurrence(second, "planned", db);
     await deleteTransaction(tx.id, db);
-    expect(projectOccurrences([rule], await db.transactions.toArray(), await db.skippedOccurrences.toArray(), "2026-01-01", "2026-03-31").some((o) => o.occurrenceDate === first.occurrenceDate)).toBe(false);
+    expect(
+      projectOccurrences(
+        [rule],
+        await db.transactions.toArray(),
+        await db.skippedOccurrences.toArray(),
+        "2026-01-01",
+        "2026-03-31",
+      ).some((o) => o.occurrenceDate === first.occurrenceDate),
+    ).toBe(false);
     await endRecurringRule(rule.id, "2026-03-01", db);
     expect(await db.transactions.count()).toBe(1);
     await expect(setRecurringRuleActive(rule.id, true, db)).rejects.toThrow(/encerrada/);
@@ -201,36 +217,84 @@ describe("persistência das recorrências", () => {
     const occurrence = projectOccurrences([rule], [], [], "2026-01-01", "2026-01-31")[0];
     if (!occurrence) throw new Error("Ocorrência esperada");
     const tx = await saveOccurrence(occurrence, "planned", db);
-    await updateTransaction(tx.id, {type:"expense", status:"planned", date:"2026-02-02", amount:1234, accountId, categoryId, description:"Individual"}, db);
-    const next = await updateRecurringRule(rule.id, draft({amount:9999}), db, "2026-02-01");
-    db.close(); await db.open();
-    const result = projectOccurrences([next], await db.transactions.toArray(), [], "2026-02-01", "2026-03-31");
+    await updateTransaction(
+      tx.id,
+      {
+        type: "expense",
+        status: "planned",
+        date: "2026-02-02",
+        amount: 1234,
+        accountId,
+        categoryId,
+        description: "Individual",
+      },
+      db,
+    );
+    const next = await updateRecurringRule(rule.id, draft({ amount: 9999 }), db, "2026-02-01");
+    db.close();
+    await db.open();
+    const result = projectOccurrences(
+      [next],
+      await db.transactions.toArray(),
+      [],
+      "2026-02-01",
+      "2026-03-31",
+    );
     expect(result.find((o) => o.transaction?.id === tx.id)?.amount).toBe(1234);
   });
 
   it("rejeita datas impossíveis e valores inválidos", async () => {
     expect(isISODate("2026-99-99")).toBe(false);
     expect(isISODate("2026-02-29")).toBe(false);
-    await expect(createRecurringRule(draft({amount:1.2}), db)).rejects.toThrow(/maior/);
-    await expect(createRecurringRule(draft({endDate:"2025-01-01"}), db)).rejects.toThrow(/anterior/);
+    await expect(createRecurringRule(draft({ amount: 1.2 }), db)).rejects.toThrow(/maior/);
+    await expect(createRecurringRule(draft({ endDate: "2025-01-01" }), db)).rejects.toThrow(
+      /anterior/,
+    );
   });
 
   it("migra v1 preservando registros e aplica índice único", async () => {
     const name = `upgrade-${newId()}`;
     const old = new Dexie(name);
-    old.version(1).stores({ accounts:"id, kind, currency, archived", categories:"id, &key, kind, archived", transactions:"id, date, type, status, accountId, destinationAccountId, categoryId, debtId, [recurringRuleId+occurrenceDate]", recurringRules:"id, active", skippedOccurrences:"id, &[recurringRuleId+occurrenceDate]", debts:"id, status", assets:"id, assetType", goals:"id, status", goalAllocations:"id, goalId", budgets:"id, &[categoryId+month], month", settings:"id" });
+    old
+      .version(1)
+      .stores({
+        accounts: "id, kind, currency, archived",
+        categories: "id, &key, kind, archived",
+        transactions:
+          "id, date, type, status, accountId, destinationAccountId, categoryId, debtId, [recurringRuleId+occurrenceDate]",
+        recurringRules: "id, active",
+        skippedOccurrences: "id, &[recurringRuleId+occurrenceDate]",
+        debts: "id, status",
+        assets: "id, assetType",
+        goals: "id, status",
+        goalAllocations: "id, goalId",
+        budgets: "id, &[categoryId+month], month",
+        settings: "id",
+      });
     await old.open();
     const account = await db.accounts.get(accountId);
     await old.table("accounts").put(account);
-    await old.table("settings").put({id:"app", schemaVersion:1});
+    await old.table("settings").put({ id: "app", schemaVersion: 1 });
     old.close();
     const upgraded = new FinanceDB(name);
     try {
       await upgraded.open();
       expect(await upgraded.accounts.get(accountId)).toEqual(account);
       expect((await upgraded.settings.get("app"))?.schemaVersion).toBe(2);
-      await upgraded.transactions.add({id:"one", recurringRuleId:"r", occurrenceDate:"2026-01-01"} as never);
-      await expect(upgraded.transactions.add({id:"two", recurringRuleId:"r", occurrenceDate:"2026-01-01"} as never)).rejects.toThrow();
-    } finally {await upgraded.delete();}
+      await upgraded.transactions.add({
+        id: "one",
+        recurringRuleId: "r",
+        occurrenceDate: "2026-01-01",
+      } as never);
+      await expect(
+        upgraded.transactions.add({
+          id: "two",
+          recurringRuleId: "r",
+          occurrenceDate: "2026-01-01",
+        } as never),
+      ).rejects.toThrow();
+    } finally {
+      await upgraded.delete();
+    }
   });
 });
