@@ -80,6 +80,8 @@ export interface RecurringRule extends Audit {
   active: boolean;
   /** Set only when permanently ended; inactive without this value means paused. */
   endedAt?: ISOTimestamp | undefined;
+  /** Templates retained for forecast dates before each rule edit. */
+  revisions?: Array<{ until: ISODate; template: Omit<RecurringRule, "revisions"> }>;
 }
 
 /** Marker for a skipped recurring occurrence (same key as a transaction). */

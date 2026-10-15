@@ -1,7 +1,9 @@
 import { getDb, newId, type FinanceDB } from "./db";
 import { assertValid, ValidationError } from "@/domain/errors";
 import { isCategoryCompatible } from "@/domain/categories";
-import { isISODate, type RecurringOccurrence } from "@/domain/recurring";
+import { isISODate, projectOccurrences, shiftDays, type RecurringOccurrence } from "@/domain/recurring";
+import { todayISO } from "@/domain/dates";
+import { validateTransaction } from "@/domain/transactions";
 import type { Frequency, RecurringRule, Transaction, TransactionStatus } from "@/domain/types";
 
 export interface RecurringRuleDraft {
@@ -24,6 +26,7 @@ async function validatedRule(
 ): Promise<Omit<RecurringRule, "id" | "createdAt" | "updatedAt" | "active" | "endedAt">> {
   const errors: string[] = [];
   const name = draft.name.trim();
+  if (!["income", "expense"].includes(draft.type)) errors.push("Tipo de recorrência inválido.");
   if (!name) errors.push("Informe a descrição.");
   if (name.length > 120) errors.push("A descrição pode ter no máximo 120 caracteres.");
   if (!Number.isSafeInteger(draft.amount) || draft.amount <= 0)
@@ -101,6 +104,7 @@ export async function updateRecurringRule(
   id: string,
   draft: RecurringRuleDraft,
   db: FinanceDB = getDb(),
+  today = todayISO(),
 ): Promise<RecurringRule> {
   return db.transaction("rw", db.accounts, db.categories, db.recurringRules, async () => {
     const previous = await db.recurringRules.get(id);
@@ -108,7 +112,10 @@ export async function updateRecurringRule(
     if (previous.endedAt)
       throw new ValidationError(["Uma recorrência encerrada não pode ser alterada."]);
     const clean = await validatedRule(draft, db, previous);
-    const next: RecurringRule = { ...previous, ...clean, updatedAt: new Date().toISOString() };
+    const { revisions, ...template } = previous;
+    const next: RecurringRule = { ...previous, ...clean,
+      revisions: [...(revisions ?? []), { until: shiftDays(today, -1), template }],
+      updatedAt: new Date().toISOString() };
     await db.recurringRules.put(next);
     return next;
   });
@@ -139,16 +146,28 @@ export async function saveOccurrence(
   status: TransactionStatus,
   db: FinanceDB = getDb(),
 ): Promise<Transaction> {
-  return db.transaction("rw", db.transactions, async () => {
+  return db.transaction("rw", db.transactions, db.accounts, db.categories, db.recurringRules, db.skippedOccurrences, async () => {
+    if (!["planned", "confirmed"].includes(status)) throw new ValidationError(["Status inválido."]);
     const existing = await db.transactions
       .where("[recurringRuleId+occurrenceDate]")
       .equals([occurrence.recurringRuleId, occurrence.occurrenceDate])
       .first();
     if (existing) {
+      if (existing.status === "confirmed") return existing;
+      const [accounts, categories] = await Promise.all([db.accounts.toArray(), db.categories.toArray()]);
+      assertValid(validateTransaction({ ...existing, type: existing.type as "income" | "expense", status }, accounts, categories, existing));
       const next = { ...existing, status, updatedAt: new Date().toISOString() };
       await db.transactions.put(next);
       return next;
     }
+    const rule = await db.recurringRules.get(occurrence.recurringRuleId);
+    if (!rule?.active || rule.endedAt) throw new ValidationError(["Esta recorrência está pausada ou encerrada."]);
+    const forecasts = projectOccurrences([rule], [], await db.skippedOccurrences.toArray(), occurrence.occurrenceDate, occurrence.occurrenceDate);
+    if (!forecasts.length) throw new ValidationError(["Esta ocorrência não faz mais parte da recorrência."]);
+    const [accounts, categories] = await Promise.all([db.accounts.toArray(), db.categories.toArray()]);
+    assertValid(validateTransaction({ ...occurrence, status }, accounts, categories));
+    const account = accounts.find((a) => a.id === occurrence.accountId);
+    if (!account || account.currency !== occurrence.currency) throw new ValidationError(["A moeda da conta foi alterada. Edite a recorrência."]);
     const now = new Date().toISOString();
     const tx: Transaction = {
       id: newId(),
