@@ -22,6 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { getDb } from "@/data/db";
 import { createTransaction, deleteTransaction, updateTransaction } from "@/data/transactions";
+import { saveOccurrence } from "@/data/recurring";
+import type { RecurringOccurrence } from "@/domain/recurring";
 import { categoryKindFor } from "@/domain/categories";
 import { todayISO } from "@/domain/dates";
 import { currencyDigits, parseToCents } from "@/domain/money";
@@ -32,28 +34,57 @@ import { cn } from "@/lib/utils";
 
 interface EntryCtx {
   openEntry: (tx?: Transaction) => void;
+  openOccurrence: (occurrence: RecurringOccurrence) => void;
 }
-const Ctx = createContext<EntryCtx>({ openEntry: () => {} });
+const Ctx = createContext<EntryCtx>({ openEntry: () => {}, openOccurrence: () => {} });
 export const useEntry = () => useContext(Ctx);
 
 export function EntryProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<{ open: boolean; tx?: Transaction | undefined }>({
+  const [state, setState] = useState<{
+    open: boolean;
+    tx?: Transaction | undefined;
+    occurrence?: RecurringOccurrence | undefined;
+  }>({
     open: false,
   });
   const openEntry = useCallback((tx?: Transaction) => setState({ open: true, tx }), []);
-  const value = useMemo(() => ({ openEntry }), [openEntry]);
+  const openOccurrence = useCallback(
+    (occurrence: RecurringOccurrence) => setState({ open: true, occurrence }),
+    [],
+  );
+  const value = useMemo(() => ({ openEntry, openOccurrence }), [openEntry, openOccurrence]);
   return (
     <Ctx.Provider value={value}>
       {children}
       <Dialog open={state.open} onOpenChange={(open) => setState((s) => ({ ...s, open }))}>
         <DialogContent className="max-h-[92vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{state.tx ? "Editar lançamento" : "Novo lançamento"}</DialogTitle>
+            <DialogTitle>
+              {state.tx || state.occurrence ? "Editar lançamento" : "Novo lançamento"}
+            </DialogTitle>
             <DialogDescription>
               Receita, despesa ou transferência entre suas contas.
             </DialogDescription>
           </DialogHeader>
-          {state.open && <EntryForm tx={state.tx} onDone={() => setState({ open: false })} />}
+          {state.open && (
+            <EntryForm
+              tx={
+                state.tx ??
+                (state.occurrence
+                  ? ({
+                      ...state.occurrence,
+                      id: "virtual",
+                      status: "planned",
+                      createdAt: "",
+                      updatedAt: "",
+                      ...(state.occurrence.notes ? { notes: state.occurrence.notes } : {}),
+                    } as Transaction)
+                  : undefined)
+              }
+              occurrence={state.occurrence}
+              onDone={() => setState({ open: false })}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </Ctx.Provider>
@@ -62,7 +93,15 @@ export function EntryProvider({ children }: { children: ReactNode }) {
 
 const TYPES: EntryType[] = ["expense", "income", "transfer"];
 
-function EntryForm({ tx, onDone }: { tx?: Transaction | undefined; onDone: () => void }) {
+function EntryForm({
+  tx,
+  occurrence,
+  onDone,
+}: {
+  tx?: Transaction | undefined;
+  occurrence?: RecurringOccurrence | undefined;
+  onDone: () => void;
+}) {
   const accounts = useLiveQuery(() => getDb().accounts.toArray(), []);
   const categories = useLiveQuery(() => getDb().categories.toArray(), []);
   const [type, setType] = useState<EntryType>((tx?.type as EntryType) ?? "expense");
@@ -91,7 +130,7 @@ function EntryForm({ tx, onDone }: { tx?: Transaction | undefined; onDone: () =>
     .sort((a, b) => a.sortOrder - b.sortOrder);
 
   useEffect(() => {
-    if (!accountId && usable.length) setAccountId(usable[0]!.id);
+    if (!accountId && usable.length) setAccountId(usable[0]?.id ?? "");
   }, [accountId, usable]);
   useEffect(() => {
     if (categoryId && categories && !cats.some((c) => c.id === categoryId)) setCategoryId("");
@@ -125,7 +164,19 @@ function EntryForm({ tx, onDone }: { tx?: Transaction | undefined; onDone: () =>
       notes,
     };
     try {
-      if (tx) await updateTransaction(tx.id, draft);
+      if (occurrence) {
+        if (type === "transfer") return setErrors(["Uma recorrência deve ser receita ou despesa."]);
+        await saveOccurrence(
+          {
+            ...occurrence,
+            ...draft,
+            type,
+            currency: source?.currency ?? occurrence.currency,
+            categoryId,
+          },
+          status,
+        );
+      } else if (tx) await updateTransaction(tx.id, draft);
       else await createTransaction(draft);
       toast.success(tx ? "Lançamento atualizado" : "Lançamento salvo");
       onDone();
@@ -264,7 +315,7 @@ function EntryForm({ tx, onDone }: { tx?: Transaction | undefined; onDone: () =>
       <Button type="submit" disabled={saving} className="h-11">
         {saving ? "Salvando…" : "Salvar"}
       </Button>
-      {tx && (
+      {tx && !occurrence && (
         <Button
           type="button"
           variant={confirmDelete ? "destructive" : "ghost"}

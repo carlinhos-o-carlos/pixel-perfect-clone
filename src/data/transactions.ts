@@ -31,7 +31,9 @@ export async function createTransaction(
       db.categories.toArray(),
     ]);
     assertValid(validateTransaction(d, accounts, categories));
-    const currency = accounts.find((a) => a.id === d.accountId)!.currency;
+    const account = accounts.find((a) => a.id === d.accountId);
+    if (!account) throw new ValidationError(["Conta não encontrada."]);
+    const currency = account.currency;
     const now = new Date().toISOString();
     const tx = row({ id: newId(), ...d, currency, createdAt: now, updatedAt: now });
     await db.transactions.add(tx);
@@ -55,7 +57,9 @@ export async function updateTransaction(
       db.categories.toArray(),
     ]);
     assertValid(validateTransaction(d, accounts, categories, prev));
-    const currency = accounts.find((a) => a.id === d.accountId)!.currency;
+    const account = accounts.find((a) => a.id === d.accountId);
+    if (!account) throw new ValidationError(["Conta não encontrada."]);
+    const currency = account.currency;
     // Rebuild from the draft so fields dropped by a type change (e.g. destination) disappear.
     const next = row({
       id: prev.id,
@@ -73,8 +77,21 @@ export async function updateTransaction(
 
 /** Removing the single row reverses its effect on every account atomically. */
 export async function deleteTransaction(id: string, db: FinanceDB = getDb()) {
-  await db.transaction("rw", db.transactions, async () => {
-    if (!(await db.transactions.get(id))) throw new ValidationError(["Lançamento não encontrado."]);
+  await db.transaction("rw", db.transactions, db.skippedOccurrences, async () => {
+    const tx = await db.transactions.get(id);
+    if (!tx) throw new ValidationError(["Lançamento não encontrado."]);
+    if (tx.recurringRuleId && tx.occurrenceDate) {
+      const existing = await db.skippedOccurrences
+        .where("[recurringRuleId+occurrenceDate]")
+        .equals([tx.recurringRuleId, tx.occurrenceDate])
+        .first();
+      if (!existing)
+        await db.skippedOccurrences.add({
+          id: newId(),
+          recurringRuleId: tx.recurringRuleId,
+          occurrenceDate: tx.occurrenceDate,
+        });
+    }
     await db.transactions.delete(id);
   });
 }
