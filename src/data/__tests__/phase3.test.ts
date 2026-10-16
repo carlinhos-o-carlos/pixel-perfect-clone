@@ -255,22 +255,20 @@ describe("persistência das recorrências", () => {
   it("migra v1 preservando registros e aplica índice único", async () => {
     const name = `upgrade-${newId()}`;
     const old = new Dexie(name);
-    old
-      .version(1)
-      .stores({
-        accounts: "id, kind, currency, archived",
-        categories: "id, &key, kind, archived",
-        transactions:
-          "id, date, type, status, accountId, destinationAccountId, categoryId, debtId, [recurringRuleId+occurrenceDate]",
-        recurringRules: "id, active",
-        skippedOccurrences: "id, &[recurringRuleId+occurrenceDate]",
-        debts: "id, status",
-        assets: "id, assetType",
-        goals: "id, status",
-        goalAllocations: "id, goalId",
-        budgets: "id, &[categoryId+month], month",
-        settings: "id",
-      });
+    old.version(1).stores({
+      accounts: "id, kind, currency, archived",
+      categories: "id, &key, kind, archived",
+      transactions:
+        "id, date, type, status, accountId, destinationAccountId, categoryId, debtId, [recurringRuleId+occurrenceDate]",
+      recurringRules: "id, active",
+      skippedOccurrences: "id, &[recurringRuleId+occurrenceDate]",
+      debts: "id, status",
+      assets: "id, assetType",
+      goals: "id, status",
+      goalAllocations: "id, goalId",
+      budgets: "id, &[categoryId+month], month",
+      settings: "id",
+    });
     await old.open();
     const account = await db.accounts.get(accountId);
     await old.table("accounts").put(account);
