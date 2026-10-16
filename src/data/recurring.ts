@@ -129,6 +129,47 @@ export async function updateRecurringRule(
   });
 }
 
+export type RecurringDeletionChoice =
+  | { mode: "rule-only" }
+  | { mode: "rule-and-history"; historyConfirmed: boolean };
+
+/** Delete only proven income/expense occurrences; detach every retained row. */
+export async function deleteRecurringRule(
+  id: string,
+  choice: RecurringDeletionChoice,
+  db: FinanceDB = getDb(),
+  today = todayISO(),
+) {
+  if (
+    !choice ||
+    !["rule-only", "rule-and-history"].includes(choice.mode) ||
+    (choice.mode === "rule-and-history" && choice.historyConfirmed !== true)
+  ) throw new ValidationError(["Confirme explicitamente a exclusão do histórico."]);
+  if (!isISODate(today)) throw new ValidationError(["Data de exclusão inválida."]);
+  return db.transaction("rw", db.recurringRules, db.transactions, db.skippedOccurrences, async () => {
+    const rule = await db.recurringRules.get(id);
+    if (!rule) throw new ValidationError(["Recorrência não encontrada."]);
+    const linked = await db.transactions.filter((tx) => tx.recurringRuleId === id).toArray();
+    for (const tx of linked) {
+      const provenOccurrence =
+        (tx.type === "income" || tx.type === "expense") &&
+        typeof tx.occurrenceDate === "string" && isISODate(tx.occurrenceDate);
+      const remove = provenOccurrence && (
+        choice.mode === "rule-and-history" || (tx.status === "planned" && tx.date > today)
+      );
+      if (remove) await db.transactions.delete(tx.id);
+      else {
+        const retained = { ...tx };
+        delete retained.recurringRuleId;
+        delete retained.occurrenceDate;
+        await db.transactions.put(retained);
+      }
+    }
+    await db.skippedOccurrences.filter((skip) => skip.recurringRuleId === id).delete();
+    await db.recurringRules.delete(id);
+  });
+}
+
 export async function setRecurringRuleActive(id: string, active: boolean, db: FinanceDB = getDb()) {
   const rule = await db.recurringRules.get(id);
   if (!rule) throw new ValidationError(["Recorrência não encontrada."]);

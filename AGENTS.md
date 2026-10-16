@@ -22,3 +22,4 @@
 - Recurring occurrences are calculated forecasts and are persisted only when confirmed or individually edited — prevents duplicate rows and writes during rendering.
 - Recurring template revisions retain past forecast values, and stored occurrence overrides always win — rule edits must never silently rewrite individual entries.
 - Deleting a recurring-linked transaction atomically adds a skip marker — the deleted occurrence must not reappear as a forecast.
+- Recurring-rule deletion runs atomically across rules, transactions and skip markers; retained rows lose recurrence metadata, and only proven linked income/expense occurrences may be removed — protects standalone entries and transfers without dangling references.
