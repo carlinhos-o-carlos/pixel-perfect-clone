@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
-import { CalendarClock, Check, Pencil, Pause, Play, Plus, StopCircle } from "lucide-react";
+import { CalendarClock, Check, Pencil, Pause, Play, Plus, StopCircle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { getDb } from "@/data/db";
@@ -19,6 +19,7 @@ import type { RecurringRule } from "@/domain/types";
 import { useEntry } from "@/ui/EntryContext";
 import { EmptyState, PageHeader, PhaseBadge } from "@/ui/Page";
 import { RecurringRuleDialog } from "@/ui/RecurringRuleDialog";
+import { DeleteRecurringRuleDialog } from "@/ui/DeleteRecurringRuleDialog";
 import { errorMessages } from "@/ui/form";
 
 export const Route = createFileRoute("/planejamento")({
@@ -39,6 +40,7 @@ function Planejamento() {
   const { openEntry, openOccurrence } = useEntry();
   const [from, setFrom] = useState(todayISO());
   const [ending, setEnding] = useState<RecurringRule | null>(null);
+  const [deleting, setDeleting] = useState<RecurringRule | null>(null);
   const [limit, setLimit] = useState(12);
   const [dialog, setDialog] = useState<{ open: boolean; rule?: RecurringRule | undefined }>({
     open: false,
@@ -152,6 +154,11 @@ function Planejamento() {
                           </Button>
                         </>
                       )}
+                      <Button size="icon" variant="ghost" className="text-destructive"
+                        title="Excluir regra" aria-label={`Excluir regra ${rule.name}`}
+                        onClick={() => setDeleting(rule)}>
+                        <Trash2 />
+                      </Button>
                     </li>
                   );
                 })}
@@ -303,6 +310,7 @@ function Planejamento() {
           </div>
         </div>
       )}
+      {deleting && <DeleteRecurringRuleDialog rule={deleting} onClose={() => setDeleting(null)} />}
     </>
   );
 }
