@@ -20,3 +20,5 @@
 - Category kind maps 1:1 to transaction type (income/expense/transfer); transfers never count as income/expense.
 - Phased delivery: each phase needs explicit user approval before the next.
 - Recurring occurrences are calculated forecasts and are persisted only when confirmed or individually edited — prevents duplicate rows and writes during rendering.
+- Recurring template revisions retain past forecast values, and stored occurrence overrides always win — rule edits must never silently rewrite individual entries.
+- Deleting a recurring-linked transaction atomically adds a skip marker — the deleted occurrence must not reappear as a forecast.
