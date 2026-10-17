@@ -154,9 +154,14 @@ function Planejamento() {
                           </Button>
                         </>
                       )}
-                      <Button size="icon" variant="ghost" className="text-destructive"
-                        title="Excluir regra" aria-label={`Excluir regra ${rule.name}`}
-                        onClick={() => setDeleting(rule)}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="text-destructive"
+                        title="Excluir regra"
+                        aria-label={`Excluir regra ${rule.name}`}
+                        onClick={() => setDeleting(rule)}
+                      >
                         <Trash2 />
                       </Button>
                     </li>
