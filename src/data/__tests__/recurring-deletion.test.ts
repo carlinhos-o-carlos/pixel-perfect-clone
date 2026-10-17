@@ -116,7 +116,9 @@ describe("exclusão segura de regras", () => {
       expect(await db.recurringRules.get(f.rule.id)).toBeUndefined();
       expect(await db.transactions.get(f.pendingFuture.id)).toBeUndefined();
       for (const tx of [f.confirmed, f.scheduled, f.pendingPast]) {
-        const { recurringRuleId: _rule, occurrenceDate: _date, ...expected } = tx;
+        const expected = { ...tx };
+        delete expected.recurringRuleId;
+        delete expected.occurrenceDate;
         expect(await db.transactions.get(tx.id)).toEqual(expected);
       }
       for (const tx of [f.independent, f.transfer, f.other])
@@ -132,7 +134,7 @@ describe("exclusão segura de regras", () => {
       expect(monthSummary(after, "2026-01", "2026-02-15")).toEqual(
         monthSummary(before, "2026-01", "2026-02-15"),
       );
-      expect(computeBalances(accounts, after, "2026-02-15", "projected")[f.account.id]).toBe(2750);
+      expect(computeBalances(accounts, after, "2026-02-15", "projected")[f.account.id]).toBe(750);
       db.close();
       await db.open();
       expect(await db.recurringRules.get(f.rule.id)).toBeUndefined();

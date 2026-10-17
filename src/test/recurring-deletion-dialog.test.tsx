@@ -38,7 +38,7 @@ describe("confirmação de exclusão", () => {
   it("bloqueia exclusão do histórico até confirmação explícita", async () => {
     const close = vi.fn();
     render(<DeleteRecurringRuleDialog rule={rule} onClose={close} />);
-    fireEvent.click(screen.getAllByRole("radio")[1]);
+    fireEvent.click(screen.getByRole("radio", { name: /Excluir a regra e seu histórico/ }));
     const submit = screen.getByRole("button", { name: "Excluir regra e histórico" });
     expect(submit).toBeDisabled();
     fireEvent.click(submit);
