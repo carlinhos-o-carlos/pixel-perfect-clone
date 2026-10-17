@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FluxoDeCaixaRouteImport } from './routes/fluxo-de-caixa'
 import { Route as LancamentosRouteImport } from './routes/lancamentos'
+import { Route as OrcamentoRouteImport } from './routes/orcamento'
 import { Route as PlanejamentoRouteImport } from './routes/planejamento'
 import { Route as MaisIndexRouteImport } from './routes/mais.index'
 import { Route as MaisCategoriasRouteImport } from './routes/mais.categorias'
@@ -22,9 +24,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FluxoDeCaixaRoute = FluxoDeCaixaRouteImport.update({
+  id: '/fluxo-de-caixa',
+  path: '/fluxo-de-caixa',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LancamentosRoute = LancamentosRouteImport.update({
   id: '/lancamentos',
   path: '/lancamentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrcamentoRoute = OrcamentoRouteImport.update({
+  id: '/orcamento',
+  path: '/orcamento',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlanejamentoRoute = PlanejamentoRouteImport.update({
@@ -55,7 +67,9 @@ const MaisContasRoute = MaisContasRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/fluxo-de-caixa': typeof FluxoDeCaixaRoute
   '/lancamentos': typeof LancamentosRoute
+  '/orcamento': typeof OrcamentoRoute
   '/planejamento': typeof PlanejamentoRoute
   '/mais/categorias': typeof MaisCategoriasRoute
   '/mais/configuracoes': typeof MaisConfiguracoesRoute
@@ -64,7 +78,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/fluxo-de-caixa': typeof FluxoDeCaixaRoute
   '/lancamentos': typeof LancamentosRoute
+  '/orcamento': typeof OrcamentoRoute
   '/planejamento': typeof PlanejamentoRoute
   '/mais/categorias': typeof MaisCategoriasRoute
   '/mais/configuracoes': typeof MaisConfiguracoesRoute
@@ -74,7 +90,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/fluxo-de-caixa': typeof FluxoDeCaixaRoute
   '/lancamentos': typeof LancamentosRoute
+  '/orcamento': typeof OrcamentoRoute
   '/planejamento': typeof PlanejamentoRoute
   '/mais/categorias': typeof MaisCategoriasRoute
   '/mais/configuracoes': typeof MaisConfiguracoesRoute
@@ -85,7 +103,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/fluxo-de-caixa'
     | '/lancamentos'
+    | '/orcamento'
     | '/planejamento'
     | '/mais/categorias'
     | '/mais/configuracoes'
@@ -94,7 +114,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/fluxo-de-caixa'
     | '/lancamentos'
+    | '/orcamento'
     | '/planejamento'
     | '/mais/categorias'
     | '/mais/configuracoes'
@@ -103,7 +125,9 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/fluxo-de-caixa'
     | '/lancamentos'
+    | '/orcamento'
     | '/planejamento'
     | '/mais/categorias'
     | '/mais/configuracoes'
@@ -113,7 +137,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  FluxoDeCaixaRoute: typeof FluxoDeCaixaRoute
   LancamentosRoute: typeof LancamentosRoute
+  OrcamentoRoute: typeof OrcamentoRoute
   PlanejamentoRoute: typeof PlanejamentoRoute
   MaisCategoriasRoute: typeof MaisCategoriasRoute
   MaisConfiguracoesRoute: typeof MaisConfiguracoesRoute
@@ -130,11 +156,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fluxo-de-caixa': {
+      id: '/fluxo-de-caixa'
+      path: '/fluxo-de-caixa'
+      fullPath: '/fluxo-de-caixa'
+      preLoaderRoute: typeof FluxoDeCaixaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lancamentos': {
       id: '/lancamentos'
       path: '/lancamentos'
       fullPath: '/lancamentos'
       preLoaderRoute: typeof LancamentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/orcamento': {
+      id: '/orcamento'
+      path: '/orcamento'
+      fullPath: '/orcamento'
+      preLoaderRoute: typeof OrcamentoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/planejamento': {
@@ -177,7 +217,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  FluxoDeCaixaRoute: FluxoDeCaixaRoute,
   LancamentosRoute: LancamentosRoute,
+  OrcamentoRoute: OrcamentoRoute,
   PlanejamentoRoute: PlanejamentoRoute,
   MaisCategoriasRoute: MaisCategoriasRoute,
   MaisConfiguracoesRoute: MaisConfiguracoesRoute,
