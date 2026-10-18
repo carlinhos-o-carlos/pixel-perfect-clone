@@ -150,7 +150,9 @@ function Index() {
               </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">{to < today ? "Saldo no fim do mês (inclui previstos)" : "Saldo projetado"}</p>
+              <p className="text-sm text-muted-foreground">
+                {to < today ? "Saldo no fim do mês (inclui previstos)" : "Saldo projetado"}
+              </p>
               <p
                 className="break-words text-2xl font-semibold text-scheduled tabular-nums"
                 data-testid="projected-balance"
