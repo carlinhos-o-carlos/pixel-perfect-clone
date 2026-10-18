@@ -108,6 +108,7 @@ describe("Phase 4 persistence", () => {
         accountId: account.id,
         categoryId,
         frequency: "monthly",
+        dayOfMonth: 20,
         startDate: "2026-10-20",
       },
       db,
