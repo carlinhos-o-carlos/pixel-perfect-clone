@@ -23,3 +23,7 @@
 - Recurring template revisions retain past forecast values, and stored occurrence overrides always win — rule edits must never silently rewrite individual entries.
 - Deleting a recurring-linked transaction atomically adds a skip marker — the deleted occurrence must not reappear as a forecast.
 - Recurring-rule deletion runs atomically across rules, transactions and skip markers; retained rows lose recurrence metadata, and only proven linked income/expense occurrences may be removed — protects standalone entries and transfers without dangling references.
+- Planning views share a read-only Dexie snapshot and a pure stored-plus-virtual transaction merge — stored occurrence overrides count once, and rendering never materializes forecasts.
+- Budgets use the existing category/month unique index and atomic repository validation — concurrent writes cannot introduce duplicate category limits or accept newly archived categories.
+- Cash flow sums selected account effects, separating transfers and dedicated debt operations from income/expense — cash balances reconcile without classifying internal movements as revenue or spending.
+- Category deletion checks transactions, budgets and recurring templates atomically — newly supported budgets cannot lose their category, and archived categories retain their historical references.

@@ -17,7 +17,8 @@ import {
 import { Input } from "@/components/ui/input";
 import type { RecurringRule } from "@/domain/types";
 import { useEntry } from "@/ui/EntryContext";
-import { EmptyState, PageHeader, PhaseBadge } from "@/ui/Page";
+import { EmptyState, PageHeader } from "@/ui/Page";
+import { PlanningLinks } from "@/ui/PlanningControls";
 import { RecurringRuleDialog } from "@/ui/RecurringRuleDialog";
 import { DeleteRecurringRuleDialog } from "@/ui/DeleteRecurringRuleDialog";
 import { errorMessages } from "@/ui/form";
@@ -85,6 +86,7 @@ function Planejamento() {
           Nova
         </Button>
       </div>
+      <PlanningLinks />
       {!data ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : (
@@ -259,23 +261,6 @@ function Planejamento() {
                 Mostrar mais
               </Button>
             )}
-          </section>
-          <section className="grid gap-3 sm:grid-cols-2">
-            {[
-              { title: "Orçamento", text: "Limites mensais por categoria." },
-              { title: "Fluxo de Caixa", text: "Entradas e saídas mês a mês." },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="flex items-center justify-between rounded-lg border bg-card p-4 opacity-70 shadow-soft"
-              >
-                <div>
-                  <p className="font-semibold">{item.title}</p>
-                  <p className="text-sm text-muted-foreground">{item.text}</p>
-                </div>
-                <PhaseBadge phase={4} />
-              </div>
-            ))}
           </section>
         </div>
       )}

@@ -58,13 +58,30 @@ export async function setCategoryArchived(id: string, archived: boolean, db: Fin
 
 /** Only unused custom categories may be physically deleted. */
 export async function deleteCategory(id: string, db: FinanceDB = getDb()) {
-  await db.transaction("rw", db.categories, db.transactions, async () => {
-    const cat = await db.categories.get(id);
-    if (!cat) throw new ValidationError(["Categoria não encontrada."]);
-    if (cat.system)
-      throw new ValidationError(["Categorias do sistema não podem ser excluídas. Arquive-a."]);
-    if ((await db.transactions.where("categoryId").equals(id).count()) > 0)
-      throw new ValidationError(["Esta categoria tem lançamentos. Arquive-a em vez de excluir."]);
-    await db.categories.delete(id);
-  });
+  await db.transaction(
+    "rw",
+    [db.categories, db.transactions, db.budgets, db.recurringRules],
+    async () => {
+      const cat = await db.categories.get(id);
+      if (!cat) throw new ValidationError(["Categoria não encontrada."]);
+      if (cat.system)
+        throw new ValidationError(["Categorias do sistema não podem ser excluídas. Arquive-a."]);
+      if ((await db.transactions.where("categoryId").equals(id).count()) > 0)
+        throw new ValidationError(["Esta categoria tem lançamentos. Arquive-a em vez de excluir."]);
+      if ((await db.budgets.filter((b) => b.categoryId === id).count()) > 0)
+        throw new ValidationError(["Esta categoria tem orçamentos. Arquive-a em vez de excluir."]);
+      if (
+        (await db.recurringRules
+          .filter(
+            (r) =>
+              r.categoryId === id || (r.revisions ?? []).some((v) => v.template.categoryId === id),
+          )
+          .count()) > 0
+      )
+        throw new ValidationError([
+          "Esta categoria tem recorrências. Arquive-a em vez de excluir.",
+        ]);
+      await db.categories.delete(id);
+    },
+  );
 }

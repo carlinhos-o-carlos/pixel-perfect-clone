@@ -34,9 +34,14 @@ import { cn } from "@/lib/utils";
 
 interface EntryCtx {
   openEntry: (tx?: Transaction) => void;
+  openNewEntry: (type: EntryType) => void;
   openOccurrence: (occurrence: RecurringOccurrence) => void;
 }
-const Ctx = createContext<EntryCtx>({ openEntry: () => {}, openOccurrence: () => {} });
+const Ctx = createContext<EntryCtx>({
+  openEntry: () => {},
+  openNewEntry: () => {},
+  openOccurrence: () => {},
+});
 export const useEntry = () => useContext(Ctx);
 
 export function EntryProvider({ children }: { children: ReactNode }) {
@@ -44,15 +49,23 @@ export function EntryProvider({ children }: { children: ReactNode }) {
     open: boolean;
     tx?: Transaction | undefined;
     occurrence?: RecurringOccurrence | undefined;
+    initialType?: EntryType | undefined;
   }>({
     open: false,
   });
   const openEntry = useCallback((tx?: Transaction) => setState({ open: true, tx }), []);
+  const openNewEntry = useCallback(
+    (initialType: EntryType) => setState({ open: true, initialType }),
+    [],
+  );
   const openOccurrence = useCallback(
     (occurrence: RecurringOccurrence) => setState({ open: true, occurrence }),
     [],
   );
-  const value = useMemo(() => ({ openEntry, openOccurrence }), [openEntry, openOccurrence]);
+  const value = useMemo(
+    () => ({ openEntry, openNewEntry, openOccurrence }),
+    [openEntry, openNewEntry, openOccurrence],
+  );
   return (
     <Ctx.Provider value={value}>
       {children}
@@ -82,6 +95,7 @@ export function EntryProvider({ children }: { children: ReactNode }) {
                   : undefined)
               }
               occurrence={state.occurrence}
+              initialType={state.initialType}
               onDone={() => setState({ open: false })}
             />
           )}
@@ -96,15 +110,17 @@ const TYPES: EntryType[] = ["expense", "income", "transfer"];
 function EntryForm({
   tx,
   occurrence,
+  initialType,
   onDone,
 }: {
   tx?: Transaction | undefined;
   occurrence?: RecurringOccurrence | undefined;
+  initialType?: EntryType | undefined;
   onDone: () => void;
 }) {
   const accounts = useLiveQuery(() => getDb().accounts.toArray(), []);
   const categories = useLiveQuery(() => getDb().categories.toArray(), []);
-  const [type, setType] = useState<EntryType>((tx?.type as EntryType) ?? "expense");
+  const [type, setType] = useState<EntryType>((tx?.type as EntryType) ?? initialType ?? "expense");
   const [status, setStatus] = useState<TransactionStatus>(tx?.status ?? "confirmed");
   const [date, setDate] = useState(tx?.date ?? todayISO());
   const [amount, setAmount] = useState(
