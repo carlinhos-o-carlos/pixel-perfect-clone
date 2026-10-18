@@ -37,7 +37,11 @@ interface EntryCtx {
   openNewEntry: (type: EntryType) => void;
   openOccurrence: (occurrence: RecurringOccurrence) => void;
 }
-const Ctx = createContext<EntryCtx>({ openEntry: () => {}, openNewEntry: () => {}, openOccurrence: () => {} });
+const Ctx = createContext<EntryCtx>({
+  openEntry: () => {},
+  openNewEntry: () => {},
+  openOccurrence: () => {},
+});
 export const useEntry = () => useContext(Ctx);
 
 export function EntryProvider({ children }: { children: ReactNode }) {
@@ -50,12 +54,18 @@ export function EntryProvider({ children }: { children: ReactNode }) {
     open: false,
   });
   const openEntry = useCallback((tx?: Transaction) => setState({ open: true, tx }), []);
-  const openNewEntry = useCallback((initialType: EntryType) => setState({ open: true, initialType }), []);
+  const openNewEntry = useCallback(
+    (initialType: EntryType) => setState({ open: true, initialType }),
+    [],
+  );
   const openOccurrence = useCallback(
     (occurrence: RecurringOccurrence) => setState({ open: true, occurrence }),
     [],
   );
-  const value = useMemo(() => ({ openEntry, openNewEntry, openOccurrence }), [openEntry, openNewEntry, openOccurrence]);
+  const value = useMemo(
+    () => ({ openEntry, openNewEntry, openOccurrence }),
+    [openEntry, openNewEntry, openOccurrence],
+  );
   return (
     <Ctx.Provider value={value}>
       {children}
