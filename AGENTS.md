@@ -26,3 +26,4 @@
 - Planning views share a read-only Dexie snapshot and a pure stored-plus-virtual transaction merge — stored occurrence overrides count once, and rendering never materializes forecasts.
 - Budgets use the existing category/month unique index and atomic repository validation — concurrent writes cannot introduce duplicate category limits or accept newly archived categories.
 - Cash flow sums selected account effects, separating transfers and dedicated debt operations from income/expense — cash balances reconcile without classifying internal movements as revenue or spending.
+- Category deletion checks transactions, budgets and recurring templates atomically — newly supported budgets cannot lose their category, and archived categories retain their historical references.
