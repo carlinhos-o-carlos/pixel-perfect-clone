@@ -135,7 +135,7 @@ function Index() {
           </Button>
         </EmptyState>
       ) : (
-        <div className="grid gap-8">
+        <div className="grid min-w-0 gap-8 [&>section]:min-w-0">
           <section className="grid grid-cols-2 gap-4 border-y py-5">
             <div>
               <p className="text-sm text-muted-foreground">Saldo atual realizado</p>
@@ -150,7 +150,7 @@ function Index() {
               </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Saldo projetado</p>
+              <p className="text-sm text-muted-foreground">{to < today ? "Saldo no fim do mês (inclui previstos)" : "Saldo projetado"}</p>
               <p
                 className="break-words text-2xl font-semibold text-scheduled tabular-nums"
                 data-testid="projected-balance"

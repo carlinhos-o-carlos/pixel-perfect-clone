@@ -32,7 +32,7 @@ export function CashFlowChart({
       aria-label="Evolução dos saldos realizado e projetado"
     >
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={points} margin={{ top: 12, right: 12, bottom: 8, left: 0 }}>
+        <LineChart data={points} margin={{ top: 12, right: 12, bottom: 8, left: 12 }}>
           <CartesianGrid stroke="var(--border)" vertical={false} />
           <XAxis
             dataKey="date"
@@ -40,7 +40,7 @@ export function CashFlowChart({
             stroke="var(--muted-foreground)"
           />
           <YAxis
-            width={85}
+            width={105}
             tickFormatter={(v: number) => formatMoney(v, currency, locale)}
             stroke="var(--muted-foreground)"
           />
