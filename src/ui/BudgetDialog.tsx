@@ -9,7 +9,7 @@ import type { Budget, Category } from "@/domain/types";
 import { centsToInput, ErrorList, errorMessages, Field, selectClass } from "./form";
 
 export function BudgetDialog({ budget, month, currency, categories, onClose }: {
-  budget?: Budget; month: string; currency: string; categories: Category[]; onClose: () => void;
+  budget?: Budget | undefined; month: string; currency: string; categories: Category[]; onClose: () => void;
 }) {
   const [categoryId, setCategoryId] = useState(budget?.categoryId ?? "");
   const [amount, setAmount] = useState(budget ? centsToInput(budget.amount, currencyDigits(budget.currency)) : "");
