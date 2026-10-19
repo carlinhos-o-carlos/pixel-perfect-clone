@@ -16,7 +16,7 @@ import { Field, selectClass } from "./form";
 import { useEntry } from "./EntryContext";
 
 const shortcutClass =
-  "h-11 shrink-0 rounded-md px-4 py-2 focus-visible:ring-2 focus-visible:ring-offset-2";
+  "h-11 shrink-0 rounded-md px-4 py-2 focus-visible:ring-2 focus-visible:ring-offset-2 aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground aria-[current=page]:font-semibold";
 
 export function PlanningLinks({ includeEntries = false }: { includeEntries?: boolean }) {
   const { openNewEntry } = useEntry();
@@ -57,7 +57,6 @@ export function PlanningLinks({ includeEntries = false }: { includeEntries?: boo
         <Link
           to="/orcamento"
           activeOptions={{ exact: true }}
-          activeProps={{ className: "bg-accent text-accent-foreground font-semibold" }}
         >
           <Gauge />
           Orçamento
@@ -67,7 +66,6 @@ export function PlanningLinks({ includeEntries = false }: { includeEntries?: boo
         <Link
           to="/fluxo-de-caixa"
           activeOptions={{ exact: true }}
-          activeProps={{ className: "bg-accent text-accent-foreground font-semibold" }}
         >
           <CalendarRange />
           Fluxo de caixa
@@ -77,7 +75,6 @@ export function PlanningLinks({ includeEntries = false }: { includeEntries?: boo
         <Link
           to="/planejamento"
           activeOptions={{ exact: true }}
-          activeProps={{ className: "bg-accent text-accent-foreground font-semibold" }}
         >
           <Repeat />
           Recorrentes

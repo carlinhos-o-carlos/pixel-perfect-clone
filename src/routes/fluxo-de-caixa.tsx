@@ -56,7 +56,7 @@ function Fluxo() {
     <>
       <PageHeader title="Fluxo de caixa" subtitle="Entradas, saídas e saldos ao longo do tempo." />
       <PlanningLinks />
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-4">
         <Field label="De" htmlFor="flow-from">
           <Input
             id="flow-from"
