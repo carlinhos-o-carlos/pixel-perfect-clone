@@ -13,6 +13,8 @@
 
 ## Architecture rules
 
+- Financial shortcuts share layout and Button styling in PlanningLinks; home opts into entry actions — keeps wrapped groups consistent without per-page fixes.
+
 - Local-first: all data in IndexedDB via Dexie (`src/data/db.ts`); no backend/auth — privacy requirement from the product brief.
 - Money is integer cents + currency code (`src/domain/money.ts`); never float math — avoids rounding errors.
 - Financial logic lives in pure `src/domain/` functions with Vitest tests; UI never computes totals itself.

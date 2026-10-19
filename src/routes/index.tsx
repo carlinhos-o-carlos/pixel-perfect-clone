@@ -1,7 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Wallet, ShieldCheck, ArrowDownLeft, ArrowUpRight, ArrowLeftRight } from "lucide-react";
+import { Wallet, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { readPlanning } from "@/data/planning";
 import { todayISO } from "@/domain/dates";
@@ -40,7 +40,7 @@ function Index() {
   const today = todayISO();
   const [month, setMonth] = useState(today.slice(0, 7));
   const [currency, setCurrency] = useState("BRL");
-  const { openNewEntry, openEntry, openOccurrence } = useEntry();
+  const { openEntry, openOccurrence } = useEntry();
   const bounds = monthBounds(month);
   const from = bounds?.from ?? today;
   const to = bounds?.to ?? today;
@@ -97,21 +97,7 @@ function Index() {
   return (
     <>
       <PageHeader title="Sua vida financeira" subtitle="Um olhar sobre o mês." />
-      <div className="mb-5 flex flex-wrap gap-2">
-        <Button variant="outline" onClick={() => openNewEntry("income")}>
-          <ArrowDownLeft className="text-income" />
-          Receita
-        </Button>
-        <Button variant="outline" onClick={() => openNewEntry("expense")}>
-          <ArrowUpRight className="text-expense" />
-          Despesa
-        </Button>
-        <Button variant="outline" onClick={() => openNewEntry("transfer")}>
-          <ArrowLeftRight />
-          Transferência
-        </Button>
-      </div>
-      <PlanningLinks />
+      <PlanningLinks includeEntries />
       <div className="mb-6 flex flex-wrap items-end gap-3">
         <MonthControl month={month} onChange={setMonth} />
         <CurrencyControl
