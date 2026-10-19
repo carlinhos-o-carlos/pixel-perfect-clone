@@ -1,27 +1,75 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, CalendarRange, Gauge } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CalendarRange,
+  Gauge,
+  ArrowDownLeft,
+  ArrowUpRight,
+  ArrowLeftRight,
+  Repeat,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { adjacentMonth } from "@/domain/planning";
 import { Field, selectClass } from "./form";
+import { useEntry } from "./EntryContext";
 
-export function PlanningLinks() {
+const shortcutClass =
+  "h-11 shrink-0 rounded-md px-4 py-2 focus-visible:ring-2 focus-visible:ring-offset-2 aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground aria-[current=page]:font-semibold";
+
+export function PlanningLinks({ includeEntries = false }: { includeEntries?: boolean }) {
+  const { openNewEntry } = useEntry();
   return (
-    <nav aria-label="Visões de planejamento" className="mb-6 flex flex-wrap gap-2">
-      <Button variant="outline" asChild>
-        <Link to="/orcamento">
+    <nav
+      aria-label="Visões de planejamento"
+      className="mb-6 flex w-full min-w-0 flex-wrap items-center justify-center gap-2"
+    >
+      {includeEntries && (
+        <>
+          <Button
+            variant="outline"
+            className={shortcutClass}
+            onClick={() => openNewEntry("income")}
+          >
+            <ArrowDownLeft className="text-income" />
+            Receita
+          </Button>
+          <Button
+            variant="outline"
+            className={shortcutClass}
+            onClick={() => openNewEntry("expense")}
+          >
+            <ArrowUpRight className="text-expense" />
+            Despesa
+          </Button>
+          <Button
+            variant="outline"
+            className={shortcutClass}
+            onClick={() => openNewEntry("transfer")}
+          >
+            <ArrowLeftRight />
+            Transferência
+          </Button>
+        </>
+      )}
+      <Button variant="outline" className={shortcutClass} asChild>
+        <Link to="/orcamento" activeOptions={{ exact: true }}>
           <Gauge />
           Orçamento
         </Link>
       </Button>
-      <Button variant="outline" asChild>
-        <Link to="/fluxo-de-caixa">
+      <Button variant="outline" className={shortcutClass} asChild>
+        <Link to="/fluxo-de-caixa" activeOptions={{ exact: true }}>
           <CalendarRange />
           Fluxo de caixa
         </Link>
       </Button>
-      <Button variant="ghost" asChild>
-        <Link to="/planejamento">Recorrentes</Link>
+      <Button variant="outline" className={shortcutClass} asChild>
+        <Link to="/planejamento" activeOptions={{ exact: true }}>
+          <Repeat />
+          Recorrentes
+        </Link>
       </Button>
     </nav>
   );
