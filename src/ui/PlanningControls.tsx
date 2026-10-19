@@ -54,28 +54,19 @@ export function PlanningLinks({ includeEntries = false }: { includeEntries?: boo
         </>
       )}
       <Button variant="outline" className={shortcutClass} asChild>
-        <Link
-          to="/orcamento"
-          activeOptions={{ exact: true }}
-        >
+        <Link to="/orcamento" activeOptions={{ exact: true }}>
           <Gauge />
           Orçamento
         </Link>
       </Button>
       <Button variant="outline" className={shortcutClass} asChild>
-        <Link
-          to="/fluxo-de-caixa"
-          activeOptions={{ exact: true }}
-        >
+        <Link to="/fluxo-de-caixa" activeOptions={{ exact: true }}>
           <CalendarRange />
           Fluxo de caixa
         </Link>
       </Button>
       <Button variant="outline" className={shortcutClass} asChild>
-        <Link
-          to="/planejamento"
-          activeOptions={{ exact: true }}
-        >
+        <Link to="/planejamento" activeOptions={{ exact: true }}>
           <Repeat />
           Recorrentes
         </Link>
