@@ -104,6 +104,24 @@ export interface Debt extends Audit {
   nextDueDate?: ISODate;
   paymentAccountId?: string;
   status: "active" | "paid" | "archived";
+  /** Phase 5 (optional for rows from older versions). */
+  interestRateBp?: number | undefined;
+  interestPeriod?: "monthly" | "yearly" | undefined;
+  dueDay?: number | undefined;
+  notes?: string | undefined;
+  /** The single loan_proceeds entry created for this debt, if any. */
+  proceedsTransactionId?: string | undefined;
+  paidAt?: ISODate | undefined;
+}
+
+/** Manual debt balance at a reference date; never rewritten. */
+export interface DebtBalance {
+  id: string;
+  debtId: string;
+  date: ISODate;
+  balance: Cents;
+  note?: string | undefined;
+  createdAt: ISOTimestamp;
 }
 
 export type AssetType =
@@ -121,7 +139,19 @@ export interface Asset extends Audit {
   currency: CurrencyCode;
   value: Cents;
   valuationDate: ISODate;
-  notes?: string;
+  notes?: string | undefined;
+  archived?: boolean;
+  /** Already inside an account balance: listed, never added to net worth again. */
+  countedInAccounts?: boolean;
+}
+
+/** Estimated asset value at a reference date; history is append-only. */
+export interface AssetValuation {
+  id: string;
+  assetId: string;
+  date: ISODate;
+  value: Cents;
+  createdAt: ISOTimestamp;
 }
 
 export interface Goal extends Audit {
@@ -134,13 +164,14 @@ export interface Goal extends Audit {
   mode: "account_linked" | "manual";
   linkedAccountIds: string[];
   status: "active" | "achieved" | "archived";
+  description?: string | undefined;
 }
 
 export interface GoalAllocation extends Audit {
   goalId: string;
   date: ISODate;
   amount: Cents;
-  note?: string;
+  note?: string | undefined;
 }
 
 export interface Budget extends Audit {

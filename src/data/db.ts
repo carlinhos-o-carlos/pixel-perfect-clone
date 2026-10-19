@@ -3,9 +3,11 @@ import { SYSTEM_CATEGORIES } from "@/domain/categories";
 import type {
   Account,
   Asset,
+  AssetValuation,
   Budget,
   Category,
   Debt,
+  DebtBalance,
   Goal,
   GoalAllocation,
   RecurringRule,
@@ -14,7 +16,7 @@ import type {
   Transaction,
 } from "@/domain/types";
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export class FinanceDB extends Dexie {
   accounts!: EntityTable<Account, "id">;
@@ -24,6 +26,8 @@ export class FinanceDB extends Dexie {
   skippedOccurrences!: EntityTable<SkippedOccurrence, "id">;
   debts!: EntityTable<Debt, "id">;
   assets!: EntityTable<Asset, "id">;
+  assetValuations!: EntityTable<AssetValuation, "id">;
+  debtBalances!: EntityTable<DebtBalance, "id">;
   goals!: EntityTable<Goal, "id">;
   goalAllocations!: EntityTable<GoalAllocation, "id">;
   budgets!: EntityTable<Budget, "id">;
@@ -56,6 +60,41 @@ export class FinanceDB extends Dexie {
       })
       .upgrade(async (tx) => {
         await tx.table("settings").toCollection().modify({ schemaVersion: 2 });
+      });
+    // v3 (Phase 5) adds append-only value histories for assets and debts.
+    // Existing rows are only given safe defaults; nothing is removed.
+    this.version(3)
+      .stores({
+        assets: "id, assetType, archived",
+        assetValuations: "id, assetId",
+        debtBalances: "id, debtId",
+      })
+      .upgrade(async (tx) => {
+        const now = new Date().toISOString();
+        await tx.table("assets").toCollection().modify((a: Asset) => {
+          a.archived ??= false;
+          a.countedInAccounts ??= false;
+        });
+        const assets: Asset[] = await tx.table("assets").toArray();
+        await tx.table("assetValuations").bulkAdd(
+          assets.map((a) => ({
+            id: newId(),
+            assetId: a.id,
+            date: a.valuationDate,
+            value: a.value,
+            createdAt: now,
+          })),
+        );
+        const debts: Debt[] = await tx.table("debts").toArray();
+        await tx.table("debtBalances").bulkAdd(
+          debts.map((d) => ({
+            id: newId(),
+            debtId: d.id,
+            date: d.openingDate,
+            balance: d.openingBalance,
+            createdAt: now,
+          })),
+        );
       });
     this.on("populate", (tx) => seedInitialData(tx.table("categories"), tx.table("settings")));
   }
