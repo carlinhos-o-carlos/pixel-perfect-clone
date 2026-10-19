@@ -1,47 +1,84 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, CalendarRange, Gauge, ArrowDownLeft, ArrowUpRight, ArrowLeftRight, Repeat } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CalendarRange,
+  Gauge,
+  ArrowDownLeft,
+  ArrowUpRight,
+  ArrowLeftRight,
+  Repeat,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { adjacentMonth } from "@/domain/planning";
 import { Field, selectClass } from "./form";
 import { useEntry } from "./EntryContext";
 
-const shortcutClass = "h-11 shrink-0 rounded-md px-4 py-2 focus-visible:ring-2 focus-visible:ring-offset-2";
+const shortcutClass =
+  "h-11 shrink-0 rounded-md px-4 py-2 focus-visible:ring-2 focus-visible:ring-offset-2";
 
 export function PlanningLinks({ includeEntries = false }: { includeEntries?: boolean }) {
   const { openNewEntry } = useEntry();
   return (
-    <nav aria-label="Visões de planejamento" className="mb-6 flex w-full min-w-0 flex-wrap items-center justify-center gap-2">
+    <nav
+      aria-label="Visões de planejamento"
+      className="mb-6 flex w-full min-w-0 flex-wrap items-center justify-center gap-2"
+    >
       {includeEntries && (
         <>
-          <Button variant="outline" className={shortcutClass} onClick={() => openNewEntry("income")}>
+          <Button
+            variant="outline"
+            className={shortcutClass}
+            onClick={() => openNewEntry("income")}
+          >
             <ArrowDownLeft className="text-income" />
             Receita
           </Button>
-          <Button variant="outline" className={shortcutClass} onClick={() => openNewEntry("expense")}>
+          <Button
+            variant="outline"
+            className={shortcutClass}
+            onClick={() => openNewEntry("expense")}
+          >
             <ArrowUpRight className="text-expense" />
             Despesa
           </Button>
-          <Button variant="outline" className={shortcutClass} onClick={() => openNewEntry("transfer")}>
+          <Button
+            variant="outline"
+            className={shortcutClass}
+            onClick={() => openNewEntry("transfer")}
+          >
             <ArrowLeftRight />
             Transferência
           </Button>
         </>
       )}
       <Button variant="outline" className={shortcutClass} asChild>
-        <Link to="/orcamento" activeOptions={{ exact: true }} activeProps={{ className: "bg-accent text-accent-foreground font-semibold" }}>
+        <Link
+          to="/orcamento"
+          activeOptions={{ exact: true }}
+          activeProps={{ className: "bg-accent text-accent-foreground font-semibold" }}
+        >
           <Gauge />
           Orçamento
         </Link>
       </Button>
       <Button variant="outline" className={shortcutClass} asChild>
-        <Link to="/fluxo-de-caixa" activeOptions={{ exact: true }} activeProps={{ className: "bg-accent text-accent-foreground font-semibold" }}>
+        <Link
+          to="/fluxo-de-caixa"
+          activeOptions={{ exact: true }}
+          activeProps={{ className: "bg-accent text-accent-foreground font-semibold" }}
+        >
           <CalendarRange />
           Fluxo de caixa
         </Link>
       </Button>
       <Button variant="outline" className={shortcutClass} asChild>
-        <Link to="/planejamento" activeOptions={{ exact: true }} activeProps={{ className: "bg-accent text-accent-foreground font-semibold" }}>
+        <Link
+          to="/planejamento"
+          activeOptions={{ exact: true }}
+          activeProps={{ className: "bg-accent text-accent-foreground font-semibold" }}
+        >
           <Repeat />
           Recorrentes
         </Link>
