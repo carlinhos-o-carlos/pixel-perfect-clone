@@ -219,7 +219,7 @@ describe("phase 5 — persistence and migration", () => {
   it("upgrades a v2 database keeping existing rows and seeding histories", async () => {
     const name = `t-${newId()}`;
     const old = new Dexie(name);
-    old.version(20).stores({
+    old.version(2).stores({
       accounts: "id, kind, currency, archived",
       categories: "id, &key, kind, archived",
       transactions:
