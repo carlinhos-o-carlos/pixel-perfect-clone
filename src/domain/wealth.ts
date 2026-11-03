@@ -85,9 +85,11 @@ export function validateValuation(value: Cents, date: ISODate): string[] {
 
 /** Latest record by reference date, then by creation time. */
 export function latest<T extends { date: ISODate; createdAt: string }>(rows: T[]): T | undefined {
-  return [...rows].sort((a, b) =>
-    a.date === b.date ? a.createdAt.localeCompare(b.createdAt) : a.date.localeCompare(b.date),
-  ).at(-1);
+  return [...rows]
+    .sort((a, b) =>
+      a.date === b.date ? a.createdAt.localeCompare(b.createdAt) : a.date.localeCompare(b.date),
+    )
+    .at(-1);
 }
 
 export function currentAssetValue(valuations: AssetValuation[]): AssetValuation | undefined {
@@ -289,8 +291,7 @@ export function validateGoal(input: GoalInput): string[] {
   validCurrency(input.currency, e);
   if (!Number.isSafeInteger(input.target) || input.target <= 0)
     e.push("O valor-alvo precisa ser maior que zero.");
-  if (input.targetDate !== undefined && !isISODate(input.targetDate))
-    e.push("Data-alvo inválida.");
+  if (input.targetDate !== undefined && !isISODate(input.targetDate)) e.push("Data-alvo inválida.");
   return e;
 }
 

@@ -15,9 +15,13 @@ import { Route as LancamentosRouteImport } from './routes/lancamentos'
 import { Route as OrcamentoRouteImport } from './routes/orcamento'
 import { Route as PlanejamentoRouteImport } from './routes/planejamento'
 import { Route as MaisIndexRouteImport } from './routes/mais.index'
+import { Route as MaisAtivosRouteImport } from './routes/mais.ativos'
 import { Route as MaisCategoriasRouteImport } from './routes/mais.categorias'
 import { Route as MaisConfiguracoesRouteImport } from './routes/mais.configuracoes'
 import { Route as MaisContasRouteImport } from './routes/mais.contas'
+import { Route as MaisDividasRouteImport } from './routes/mais.dividas'
+import { Route as MaisMetasRouteImport } from './routes/mais.metas'
+import { Route as MaisPatrimonioRouteImport } from './routes/mais.patrimonio'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -49,6 +53,11 @@ const MaisIndexRoute = MaisIndexRouteImport.update({
   path: '/mais/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MaisAtivosRoute = MaisAtivosRouteImport.update({
+  id: '/mais/ativos',
+  path: '/mais/ativos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MaisCategoriasRoute = MaisCategoriasRouteImport.update({
   id: '/mais/categorias',
   path: '/mais/categorias',
@@ -64,6 +73,21 @@ const MaisContasRoute = MaisContasRouteImport.update({
   path: '/mais/contas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MaisDividasRoute = MaisDividasRouteImport.update({
+  id: '/mais/dividas',
+  path: '/mais/dividas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaisMetasRoute = MaisMetasRouteImport.update({
+  id: '/mais/metas',
+  path: '/mais/metas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaisPatrimonioRoute = MaisPatrimonioRouteImport.update({
+  id: '/mais/patrimonio',
+  path: '/mais/patrimonio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -71,9 +95,13 @@ export interface FileRoutesByFullPath {
   '/lancamentos': typeof LancamentosRoute
   '/orcamento': typeof OrcamentoRoute
   '/planejamento': typeof PlanejamentoRoute
+  '/mais/ativos': typeof MaisAtivosRoute
   '/mais/categorias': typeof MaisCategoriasRoute
   '/mais/configuracoes': typeof MaisConfiguracoesRoute
   '/mais/contas': typeof MaisContasRoute
+  '/mais/dividas': typeof MaisDividasRoute
+  '/mais/metas': typeof MaisMetasRoute
+  '/mais/patrimonio': typeof MaisPatrimonioRoute
   '/mais/': typeof MaisIndexRoute
 }
 export interface FileRoutesByTo {
@@ -82,9 +110,13 @@ export interface FileRoutesByTo {
   '/lancamentos': typeof LancamentosRoute
   '/orcamento': typeof OrcamentoRoute
   '/planejamento': typeof PlanejamentoRoute
+  '/mais/ativos': typeof MaisAtivosRoute
   '/mais/categorias': typeof MaisCategoriasRoute
   '/mais/configuracoes': typeof MaisConfiguracoesRoute
   '/mais/contas': typeof MaisContasRoute
+  '/mais/dividas': typeof MaisDividasRoute
+  '/mais/metas': typeof MaisMetasRoute
+  '/mais/patrimonio': typeof MaisPatrimonioRoute
   '/mais': typeof MaisIndexRoute
 }
 export interface FileRoutesById {
@@ -94,9 +126,13 @@ export interface FileRoutesById {
   '/lancamentos': typeof LancamentosRoute
   '/orcamento': typeof OrcamentoRoute
   '/planejamento': typeof PlanejamentoRoute
+  '/mais/ativos': typeof MaisAtivosRoute
   '/mais/categorias': typeof MaisCategoriasRoute
   '/mais/configuracoes': typeof MaisConfiguracoesRoute
   '/mais/contas': typeof MaisContasRoute
+  '/mais/dividas': typeof MaisDividasRoute
+  '/mais/metas': typeof MaisMetasRoute
+  '/mais/patrimonio': typeof MaisPatrimonioRoute
   '/mais/': typeof MaisIndexRoute
 }
 export interface FileRouteTypes {
@@ -107,9 +143,13 @@ export interface FileRouteTypes {
     | '/lancamentos'
     | '/orcamento'
     | '/planejamento'
+    | '/mais/ativos'
     | '/mais/categorias'
     | '/mais/configuracoes'
     | '/mais/contas'
+    | '/mais/dividas'
+    | '/mais/metas'
+    | '/mais/patrimonio'
     | '/mais/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -118,9 +158,13 @@ export interface FileRouteTypes {
     | '/lancamentos'
     | '/orcamento'
     | '/planejamento'
+    | '/mais/ativos'
     | '/mais/categorias'
     | '/mais/configuracoes'
     | '/mais/contas'
+    | '/mais/dividas'
+    | '/mais/metas'
+    | '/mais/patrimonio'
     | '/mais'
   id:
     | '__root__'
@@ -129,9 +173,13 @@ export interface FileRouteTypes {
     | '/lancamentos'
     | '/orcamento'
     | '/planejamento'
+    | '/mais/ativos'
     | '/mais/categorias'
     | '/mais/configuracoes'
     | '/mais/contas'
+    | '/mais/dividas'
+    | '/mais/metas'
+    | '/mais/patrimonio'
     | '/mais/'
   fileRoutesById: FileRoutesById
 }
@@ -141,9 +189,13 @@ export interface RootRouteChildren {
   LancamentosRoute: typeof LancamentosRoute
   OrcamentoRoute: typeof OrcamentoRoute
   PlanejamentoRoute: typeof PlanejamentoRoute
+  MaisAtivosRoute: typeof MaisAtivosRoute
   MaisCategoriasRoute: typeof MaisCategoriasRoute
   MaisConfiguracoesRoute: typeof MaisConfiguracoesRoute
   MaisContasRoute: typeof MaisContasRoute
+  MaisDividasRoute: typeof MaisDividasRoute
+  MaisMetasRoute: typeof MaisMetasRoute
+  MaisPatrimonioRoute: typeof MaisPatrimonioRoute
   MaisIndexRoute: typeof MaisIndexRoute
 }
 
@@ -191,6 +243,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MaisIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mais/ativos': {
+      id: '/mais/ativos'
+      path: '/mais/ativos'
+      fullPath: '/mais/ativos'
+      preLoaderRoute: typeof MaisAtivosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mais/categorias': {
       id: '/mais/categorias'
       path: '/mais/categorias'
@@ -212,6 +271,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MaisContasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mais/dividas': {
+      id: '/mais/dividas'
+      path: '/mais/dividas'
+      fullPath: '/mais/dividas'
+      preLoaderRoute: typeof MaisDividasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mais/metas': {
+      id: '/mais/metas'
+      path: '/mais/metas'
+      fullPath: '/mais/metas'
+      preLoaderRoute: typeof MaisMetasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mais/patrimonio': {
+      id: '/mais/patrimonio'
+      path: '/mais/patrimonio'
+      fullPath: '/mais/patrimonio'
+      preLoaderRoute: typeof MaisPatrimonioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -221,9 +301,13 @@ const rootRouteChildren: RootRouteChildren = {
   LancamentosRoute: LancamentosRoute,
   OrcamentoRoute: OrcamentoRoute,
   PlanejamentoRoute: PlanejamentoRoute,
+  MaisAtivosRoute: MaisAtivosRoute,
   MaisCategoriasRoute: MaisCategoriasRoute,
   MaisConfiguracoesRoute: MaisConfiguracoesRoute,
   MaisContasRoute: MaisContasRoute,
+  MaisDividasRoute: MaisDividasRoute,
+  MaisMetasRoute: MaisMetasRoute,
+  MaisPatrimonioRoute: MaisPatrimonioRoute,
   MaisIndexRoute: MaisIndexRoute,
 }
 export const routeTree = rootRouteImport
