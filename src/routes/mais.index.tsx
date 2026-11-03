@@ -2,12 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import { PageHeader, PhaseBadge } from "@/ui/Page";
 
-const SOON = [
-  { title: "Patrimônio", phase: 5 },
-  { title: "Dívidas", phase: 5 },
-  { title: "Objetivos", phase: 5 },
-  { title: "Ferramentas", phase: 6 },
-];
+const SOON = [{ title: "Ferramentas", phase: 6 }];
 
 export const Route = createFileRoute("/mais/")({
   head: () => ({
@@ -30,6 +25,10 @@ export const Route = createFileRoute("/mais/")({
         {(
           [
             { to: "/mais/contas", title: "Contas" },
+            { to: "/mais/patrimonio", title: "Patrimônio líquido" },
+            { to: "/mais/ativos", title: "Bens" },
+            { to: "/mais/dividas", title: "Dívidas" },
+            { to: "/mais/metas", title: "Metas financeiras" },
             { to: "/mais/categorias", title: "Categorias" },
             { to: "/mais/configuracoes", title: "Configurações" },
           ] as const

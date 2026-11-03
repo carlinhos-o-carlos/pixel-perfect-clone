@@ -59,10 +59,21 @@ export async function updateAsset(id: string, input: AssetInput, db: FinanceDB =
   await db.transaction("rw", db.assets, db.assetValuations, async () => {
     const cur = await db.assets.get(id);
     if (!cur) throw new ValidationError(["Bem não encontrado."]);
-    if (input.currency !== cur.currency && (await db.assetValuations.where("assetId").equals(id).count()) > 1)
-      throw new ValidationError(["Não é possível trocar a moeda de um bem com histórico de valores."]);
+    if (
+      input.currency !== cur.currency &&
+      (await db.assetValuations.where("assetId").equals(id).count()) > 1
+    )
+      throw new ValidationError([
+        "Não é possível trocar a moeda de um bem com histórico de valores.",
+      ]);
     await db.assets.put(
-      strip({ ...cur, ...input, name: input.name.trim(), notes: input.notes?.trim() || undefined, updatedAt: now() }),
+      strip({
+        ...cur,
+        ...input,
+        name: input.name.trim(),
+        notes: input.notes?.trim() || undefined,
+        updatedAt: now(),
+      }),
     );
   });
 }
@@ -108,45 +119,51 @@ export async function createDebt(
   db: FinanceDB = getDb(),
 ): Promise<Debt> {
   assertValid([...validateDebt(input), ...validateDebtBalance(balance, date)]);
-  return db.transaction("rw", [db.debts, db.debtBalances, db.accounts, db.transactions], async () => {
-    const t = now();
-    const debt: Debt = strip({
-      id: newId(),
-      ...input,
-      name: input.name.trim(),
-      notes: input.notes?.trim() || undefined,
-      openingBalance: balance,
-      openingDate: date,
-      status: "active" as const,
-      createdAt: t,
-      updatedAt: t,
-    });
-    if (proceeds) {
-      const acc = await db.accounts.get(proceeds.accountId);
-      if (!acc || acc.archived) throw new ValidationError(["Selecione uma conta ativa para a entrada."]);
-      if (acc.currency !== input.currency)
-        throw new ValidationError(["A conta da entrada precisa ter a mesma moeda da dívida."]);
-      if (balance <= 0) throw new ValidationError(["Informe um valor maior que zero para registrar a entrada."]);
-      const tx: Transaction = {
+  return db.transaction(
+    "rw",
+    [db.debts, db.debtBalances, db.accounts, db.transactions],
+    async () => {
+      const t = now();
+      const debt: Debt = strip({
         id: newId(),
-        type: "loan_proceeds",
-        status: "confirmed",
-        date,
-        amount: balance,
-        currency: acc.currency,
-        accountId: acc.id,
-        debtId: debt.id,
-        description: `Entrada de ${debt.name}`,
+        ...input,
+        name: input.name.trim(),
+        notes: input.notes?.trim() || undefined,
+        openingBalance: balance,
+        openingDate: date,
+        status: "active" as const,
         createdAt: t,
         updatedAt: t,
-      };
-      await db.transactions.add(tx);
-      debt.proceedsTransactionId = tx.id;
-    }
-    await db.debts.add(debt);
-    await db.debtBalances.add({ id: newId(), debtId: debt.id, date, balance, createdAt: t });
-    return debt;
-  });
+      });
+      if (proceeds) {
+        const acc = await db.accounts.get(proceeds.accountId);
+        if (!acc || acc.archived)
+          throw new ValidationError(["Selecione uma conta ativa para a entrada."]);
+        if (acc.currency !== input.currency)
+          throw new ValidationError(["A conta da entrada precisa ter a mesma moeda da dívida."]);
+        if (balance <= 0)
+          throw new ValidationError(["Informe um valor maior que zero para registrar a entrada."]);
+        const tx: Transaction = {
+          id: newId(),
+          type: "loan_proceeds",
+          status: "confirmed",
+          date,
+          amount: balance,
+          currency: acc.currency,
+          accountId: acc.id,
+          debtId: debt.id,
+          description: `Entrada de ${debt.name}`,
+          createdAt: t,
+          updatedAt: t,
+        };
+        await db.transactions.add(tx);
+        debt.proceedsTransactionId = tx.id;
+      }
+      await db.debts.add(debt);
+      await db.debtBalances.add({ id: newId(), debtId: debt.id, date, balance, createdAt: t });
+      return debt;
+    },
+  );
 }
 
 export async function updateDebt(id: string, input: DebtInput, db: FinanceDB = getDb()) {
@@ -154,9 +171,18 @@ export async function updateDebt(id: string, input: DebtInput, db: FinanceDB = g
   await db.transaction("rw", db.debts, db.transactions, async () => {
     const cur = await db.debts.get(id);
     if (!cur) throw new ValidationError(["Dívida não encontrada."]);
-    if (input.currency !== cur.currency && (await db.transactions.where("debtId").equals(id).count()) > 0)
+    if (
+      input.currency !== cur.currency &&
+      (await db.transactions.where("debtId").equals(id).count()) > 0
+    )
       throw new ValidationError(["Não é possível trocar a moeda de uma dívida com lançamentos."]);
-    const next: Debt = { ...cur, ...input, name: input.name.trim(), notes: input.notes?.trim() || undefined, updatedAt: now() };
+    const next: Debt = {
+      ...cur,
+      ...input,
+      name: input.name.trim(),
+      notes: input.notes?.trim() || undefined,
+      updatedAt: now(),
+    };
     if (input.interestRateBp === undefined) {
       delete next.interestRateBp;
       delete next.interestPeriod;
@@ -198,8 +224,10 @@ export async function registerDebtPayment(
   db: FinanceDB = getDb(),
 ): Promise<Transaction> {
   const errors: string[] = [];
-  if (!Number.isSafeInteger(p.amount) || p.amount <= 0) errors.push("O valor pago precisa ser maior que zero.");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(p.date) || Number.isNaN(Date.parse(p.date))) errors.push("Informe uma data válida.");
+  if (!Number.isSafeInteger(p.amount) || p.amount <= 0)
+    errors.push("O valor pago precisa ser maior que zero.");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(p.date) || Number.isNaN(Date.parse(p.date)))
+    errors.push("Informe uma data válida.");
   if (p.split) errors.push(...validateSplit(p.amount, p.split));
   assertValid(errors);
   return db.transaction("rw", db.debts, db.accounts, db.transactions, async () => {
@@ -239,11 +267,16 @@ export async function registerDebtPayment(
 }
 
 /** Classifies a pending payment once; amount and account never change here. */
-export async function allocateDebtPayment(txId: string, split: PaymentSplit, db: FinanceDB = getDb()) {
+export async function allocateDebtPayment(
+  txId: string,
+  split: PaymentSplit,
+  db: FinanceDB = getDb(),
+) {
   await db.transaction("rw", db.transactions, async () => {
     const tx = await db.transactions.get(txId);
     if (!tx || tx.type !== "debt_payment") throw new ValidationError(["Pagamento não encontrado."]);
-    if (tx.allocation !== "pending") throw new ValidationError(["Este pagamento já foi classificado."]);
+    if (tx.allocation !== "pending")
+      throw new ValidationError(["Este pagamento já foi classificado."]);
     assertValid(validateSplit(tx.amount, split));
     await db.transactions.update(txId, {
       allocation: "allocated",
@@ -262,7 +295,14 @@ export async function settleDebt(id: string, date: ISODate, db: FinanceDB = getD
     const d = await db.debts.get(id);
     if (!d) throw new ValidationError(["Dívida não encontrada."]);
     if (d.status === "paid") throw new ValidationError(["A dívida já está quitada."]);
-    await db.debtBalances.add({ id: newId(), debtId: id, date, balance: 0, note: "Quitação", createdAt: now() });
+    await db.debtBalances.add({
+      id: newId(),
+      debtId: id,
+      date,
+      balance: 0,
+      note: "Quitação",
+      createdAt: now(),
+    });
     await db.debts.update(id, { status: "paid", paidAt: date, updatedAt: now() });
   });
 }
@@ -277,7 +317,9 @@ export async function deleteDebt(id: string, db: FinanceDB = getDb()) {
   await db.transaction("rw", db.debts, db.debtBalances, db.transactions, async () => {
     if (!(await db.debts.get(id))) throw new ValidationError(["Dívida não encontrada."]);
     if ((await db.transactions.where("debtId").equals(id).count()) > 0)
-      throw new ValidationError(["Esta dívida tem pagamentos ou entrada registrados. Marque como quitada em vez de excluir."]);
+      throw new ValidationError([
+        "Esta dívida tem pagamentos ou entrada registrados. Marque como quitada em vez de excluir.",
+      ]);
     await db.debtBalances.where("debtId").equals(id).delete();
     await db.debts.delete(id);
   });
@@ -319,16 +361,26 @@ export async function updateGoal(id: string, input: GoalInput, db: FinanceDB = g
   await db.transaction("rw", db.goals, db.goalAllocations, async () => {
     const cur = await db.goals.get(id);
     if (!cur) throw new ValidationError(["Meta não encontrada."]);
-    if (input.currency !== cur.currency && (await db.goalAllocations.where("goalId").equals(id).count()) > 0)
+    if (
+      input.currency !== cur.currency &&
+      (await db.goalAllocations.where("goalId").equals(id).count()) > 0
+    )
       throw new ValidationError(["Não é possível trocar a moeda de uma meta com contribuições."]);
-    const next: Goal = { ...cur, ...input, name: input.name.trim(), description: input.description?.trim() || undefined, updatedAt: now() };
+    const next: Goal = {
+      ...cur,
+      ...input,
+      name: input.name.trim(),
+      description: input.description?.trim() || undefined,
+      updatedAt: now(),
+    };
     if (!input.targetDate) delete next.targetDate;
     await db.goals.put(strip(next));
   });
 }
 
 export async function setGoalStatus(id: string, status: Goal["status"], db: FinanceDB = getDb()) {
-  if (!["active", "achieved", "archived"].includes(status)) throw new ValidationError(["Situação inválida."]);
+  if (!["active", "achieved", "archived"].includes(status))
+    throw new ValidationError(["Situação inválida."]);
   if (!(await db.goals.update(id, { status, updatedAt: now() })))
     throw new ValidationError(["Meta não encontrada."]);
 }
@@ -352,49 +404,63 @@ export interface AllocationInput {
  * A contribution is an earmark of money already in accounts, not income or a new asset.
  * Total earmarks per currency cannot exceed positive actual account balances.
  */
-async function saveAllocation(goalId: string, input: AllocationInput, id: string | null, db: FinanceDB) {
+async function saveAllocation(
+  goalId: string,
+  input: AllocationInput,
+  id: string | null,
+  db: FinanceDB,
+) {
   assertValid(validateAllocation(input.amount, input.date));
-  await db.transaction("rw", [db.goals, db.goalAllocations, db.accounts, db.transactions], async () => {
-    const goal = await db.goals.get(goalId);
-    if (!goal) throw new ValidationError(["Meta não encontrada."]);
-    if (goal.status === "archived") throw new ValidationError(["Reative a meta antes de registrar contribuições."]);
-    const prev = id ? await db.goalAllocations.get(id) : undefined;
-    if (id && (!prev || prev.goalId !== goalId)) throw new ValidationError(["Contribuição não encontrada."]);
-    const [accounts, txs, goals, all] = await Promise.all([
-      db.accounts.toArray(),
-      db.transactions.toArray(),
-      db.goals.toArray(),
-      db.goalAllocations.toArray(),
-    ]);
-    const others = all.filter((a) => a.id !== id);
-    const goalSum = others.filter((a) => a.goalId === goalId).reduce((s, a) => s + a.amount, 0);
-    if (goalSum + input.amount < 0)
-      throw new ValidationError(["A retirada é maior que o valor reservado na meta."]);
-    const balances = computeBalances(accounts, txs, todayISO());
-    const cap = allocationCapacity(goal.currency, accounts, balances, goals, [
-      ...others,
-      { id: "new", goalId, date: input.date, amount: input.amount, createdAt: "", updatedAt: "" },
-    ]);
-    if (input.amount > 0 && cap.free < 0)
-      throw new ValidationError([
-        "O total reservado em metas passaria do dinheiro disponível nas contas. O mesmo dinheiro não pode ser contado duas vezes.",
+  await db.transaction(
+    "rw",
+    [db.goals, db.goalAllocations, db.accounts, db.transactions],
+    async () => {
+      const goal = await db.goals.get(goalId);
+      if (!goal) throw new ValidationError(["Meta não encontrada."]);
+      if (goal.status === "archived")
+        throw new ValidationError(["Reative a meta antes de registrar contribuições."]);
+      const prev = id ? await db.goalAllocations.get(id) : undefined;
+      if (id && (!prev || prev.goalId !== goalId))
+        throw new ValidationError(["Contribuição não encontrada."]);
+      const [accounts, txs, goals, all] = await Promise.all([
+        db.accounts.toArray(),
+        db.transactions.toArray(),
+        db.goals.toArray(),
+        db.goalAllocations.toArray(),
       ]);
-    const t = now();
-    const row: GoalAllocation = strip({
-      id: id ?? newId(),
-      goalId,
-      date: input.date,
-      amount: input.amount,
-      note: input.note?.trim() || undefined,
-      createdAt: prev?.createdAt ?? t,
-      updatedAt: t,
-    });
-    await db.goalAllocations.put(row);
-  });
+      const others = all.filter((a) => a.id !== id);
+      const goalSum = others.filter((a) => a.goalId === goalId).reduce((s, a) => s + a.amount, 0);
+      if (goalSum + input.amount < 0)
+        throw new ValidationError(["A retirada é maior que o valor reservado na meta."]);
+      const balances = computeBalances(accounts, txs, todayISO());
+      const cap = allocationCapacity(goal.currency, accounts, balances, goals, [
+        ...others,
+        { id: "new", goalId, date: input.date, amount: input.amount, createdAt: "", updatedAt: "" },
+      ]);
+      if (input.amount > 0 && cap.free < 0)
+        throw new ValidationError([
+          "O total reservado em metas passaria do dinheiro disponível nas contas. O mesmo dinheiro não pode ser contado duas vezes.",
+        ]);
+      const t = now();
+      const row: GoalAllocation = strip({
+        id: id ?? newId(),
+        goalId,
+        date: input.date,
+        amount: input.amount,
+        note: input.note?.trim() || undefined,
+        createdAt: prev?.createdAt ?? t,
+        updatedAt: t,
+      });
+      await db.goalAllocations.put(row);
+    },
+  );
 }
 
-export const addGoalAllocation = (goalId: string, input: AllocationInput, db: FinanceDB = getDb()) =>
-  saveAllocation(goalId, input, null, db);
+export const addGoalAllocation = (
+  goalId: string,
+  input: AllocationInput,
+  db: FinanceDB = getDb(),
+) => saveAllocation(goalId, input, null, db);
 export const updateGoalAllocation = (
   goalId: string,
   id: string,
@@ -403,7 +469,8 @@ export const updateGoalAllocation = (
 ) => saveAllocation(goalId, input, id, db);
 
 export async function deleteGoalAllocation(id: string, db: FinanceDB = getDb()) {
-  if (!(await db.goalAllocations.get(id))) throw new ValidationError(["Contribuição não encontrada."]);
+  if (!(await db.goalAllocations.get(id)))
+    throw new ValidationError(["Contribuição não encontrada."]);
   await db.goalAllocations.delete(id);
 }
 
@@ -411,20 +478,39 @@ export async function deleteGoalAllocation(id: string, db: FinanceDB = getDb()) 
 export async function readWealth(db: FinanceDB = getDb()) {
   return db.transaction(
     "r",
-    [db.accounts, db.transactions, db.assets, db.assetValuations, db.debts, db.debtBalances, db.goals, db.goalAllocations, db.settings],
+    [
+      db.accounts,
+      db.transactions,
+      db.assets,
+      db.assetValuations,
+      db.debts,
+      db.debtBalances,
+      db.goals,
+      db.goalAllocations,
+      db.settings,
+    ],
     async () => {
-      const [accounts, transactions, assets, valuations, debts, debtBalances, goals, allocations, settings] =
-        await Promise.all([
-          db.accounts.toArray(),
-          db.transactions.toArray(),
-          db.assets.toArray(),
-          db.assetValuations.toArray(),
-          db.debts.toArray(),
-          db.debtBalances.toArray(),
-          db.goals.toArray(),
-          db.goalAllocations.toArray(),
-          db.settings.get("app"),
-        ]);
+      const [
+        accounts,
+        transactions,
+        assets,
+        valuations,
+        debts,
+        debtBalances,
+        goals,
+        allocations,
+        settings,
+      ] = await Promise.all([
+        db.accounts.toArray(),
+        db.transactions.toArray(),
+        db.assets.toArray(),
+        db.assetValuations.toArray(),
+        db.debts.toArray(),
+        db.debtBalances.toArray(),
+        db.goals.toArray(),
+        db.goalAllocations.toArray(),
+        db.settings.get("app"),
+      ]);
       const today = todayISO();
       return {
         today,

@@ -53,7 +53,14 @@ export function EntryProvider({ children }: { children: ReactNode }) {
   }>({
     open: false,
   });
-  const openEntry = useCallback((tx?: Transaction) => setState({ open: true, tx }), []);
+  const openEntry = useCallback((tx?: Transaction) => {
+    // Debt operations are managed (and protected) on the Debts page.
+    if (tx && (tx.type === "debt_payment" || tx.type === "loan_proceeds")) {
+      toast.info("Este lançamento pertence a uma dívida. Gerencie em Mais › Dívidas.");
+      return;
+    }
+    setState({ open: true, tx });
+  }, []);
   const openNewEntry = useCallback(
     (initialType: EntryType) => setState({ open: true, initialType }),
     [],
