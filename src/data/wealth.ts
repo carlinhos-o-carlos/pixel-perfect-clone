@@ -367,7 +367,7 @@ export async function updateGoal(id: string, input: GoalInput, db: FinanceDB = g
       (await db.goalAllocations.where("goalId").equals(id).count()) > 0
     )
       throw new ValidationError(["Não é possível trocar a moeda de uma meta com contribuições."]);
-    const next: Goal = {
+    const next = {
       ...cur,
       ...input,
       name: input.name.trim(),
