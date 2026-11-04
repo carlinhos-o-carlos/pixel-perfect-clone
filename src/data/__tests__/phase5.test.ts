@@ -48,7 +48,7 @@ const checking = (openingBalance: number) =>
 
 async function nw() {
   const w = await readWealth(db);
-  return netWorthByCurrency({ ...w, today: w.today }).BRL!;
+  return netWorthByCurrency({ ...w, today: w.today })["BRL"]!;
 }
 
 describe("phase 5 — assets", () => {
@@ -326,27 +326,23 @@ describe("phase 5 — persistence and migration", () => {
       settings: "id",
     });
     await old.open();
-    await old
-      .table("assets")
-      .add({
-        id: "a1",
-        name: "Casa",
-        assetType: "real_estate",
-        currency: "BRL",
-        value: 9,
-        valuationDate: D,
-      });
-    await old
-      .table("debts")
-      .add({
-        id: "d1",
-        name: "Fin",
-        debtType: "financing",
-        currency: "BRL",
-        openingBalance: 7,
-        openingDate: D,
-        status: "active",
-      });
+    await old.table("assets").add({
+      id: "a1",
+      name: "Casa",
+      assetType: "real_estate",
+      currency: "BRL",
+      value: 9,
+      valuationDate: D,
+    });
+    await old.table("debts").add({
+      id: "d1",
+      name: "Fin",
+      debtType: "financing",
+      currency: "BRL",
+      openingBalance: 7,
+      openingDate: D,
+      status: "active",
+    });
     old.close();
     const up = new FinanceDB(name);
     try {

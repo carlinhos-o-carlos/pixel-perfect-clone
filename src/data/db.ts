@@ -71,10 +71,13 @@ export class FinanceDB extends Dexie {
       })
       .upgrade(async (tx) => {
         const now = new Date().toISOString();
-        await tx.table("assets").toCollection().modify((a: Asset) => {
-          a.archived ??= false;
-          a.countedInAccounts ??= false;
-        });
+        await tx
+          .table("assets")
+          .toCollection()
+          .modify((a: Asset) => {
+            a.archived ??= false;
+            a.countedInAccounts ??= false;
+          });
         const assets: Asset[] = await tx.table("assets").toArray();
         await tx.table("assetValuations").bulkAdd(
           assets.map((a) => ({

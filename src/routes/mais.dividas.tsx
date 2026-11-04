@@ -20,10 +20,12 @@ import type { Debt, Transaction } from "@/domain/types";
 import { centsToInput } from "@/ui/form";
 import { EmptyState, PageHeader } from "@/ui/Page";
 import { AmountDateDialog, DebtDialog, PaymentDialog } from "@/ui/WealthDialogs";
-import { Card, ConfirmButton, fmtDate, meta, runAction } from "@/ui/WealthBits";
+import { Card, ConfirmButton } from "@/ui/WealthBits";
+import { fmtDate, meta, runAction } from "@/ui/wealthHelpers";
 
 export const Route = createFileRoute("/mais/dividas")({
-  head: () => meta("Dívidas", "Empréstimos e financiamentos: saldo devedor, pagamentos e quitação."),
+  head: () =>
+    meta("Dívidas", "Empréstimos e financiamentos: saldo devedor, pagamentos e quitação."),
   component: Dividas,
 });
 
@@ -37,12 +39,18 @@ function Dividas() {
   const [classify, setClassify] = useState<Transaction | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   if (!w) return <p className="text-sm text-muted-foreground">Carregando…</p>;
-  const debts = [...w.debts].sort((a, b) => (a.status === b.status ? a.name.localeCompare(b.name, "pt-BR") : a.status === "active" ? -1 : 1));
+  const debts = [...w.debts].sort((a, b) =>
+    a.status === b.status ? a.name.localeCompare(b.name, "pt-BR") : a.status === "active" ? -1 : 1,
+  );
   const card = (d: Debt) => {
     const s = debtStatus(d, w.debtBalances, w.transactions, w.today);
     const f = (v: number) => formatMoney(v, d.currency, w.locale);
-    const pays = w.transactions.filter((t) => t.debtId === d.id).sort((a, b) => b.date.localeCompare(a.date));
-    const snaps = w.debtBalances.filter((b) => b.debtId === d.id).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+    const pays = w.transactions
+      .filter((t) => t.debtId === d.id)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    const snaps = w.debtBalances
+      .filter((b) => b.debtId === d.id)
+      .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
     return (
       <Card key={d.id} muted={d.status !== "active"}>
         <div className="flex flex-wrap justify-between gap-2">
@@ -50,32 +58,65 @@ function Dividas() {
             <p className="font-medium">{d.name}</p>
             <p className="text-xs text-muted-foreground">
               {DEBT_TYPE_LABEL[d.debtType]} · {STATUS[d.status]}
-              {d.interestRateBp !== undefined && ` · ${centsToInput(d.interestRateBp)}% ${d.interestPeriod === "yearly" ? "a.a." : "a.m."}`}
+              {d.interestRateBp !== undefined &&
+                ` · ${centsToInput(d.interestRateBp)}% ${d.interestPeriod === "yearly" ? "a.a." : "a.m."}`}
               {d.dueDay && ` · vence dia ${d.dueDay}`}
             </p>
           </div>
           <div className="text-right">
             <p className="font-semibold tabular-nums">{f(s.balance)}</p>
-            <p className="text-xs text-muted-foreground">Saldo estimado · referência {fmtDate(s.referenceDate)}</p>
-            {s.pending > 0 && <p className="text-xs text-expense">{f(s.pending)} em pagamentos a classificar</p>}
+            <p className="text-xs text-muted-foreground">
+              Saldo estimado · referência {fmtDate(s.referenceDate)}
+            </p>
+            {s.pending > 0 && (
+              <p className="text-xs text-expense">{f(s.pending)} em pagamentos a classificar</p>
+            )}
           </div>
         </div>
         {d.notes && <p className="text-sm text-muted-foreground">{d.notes}</p>}
         <div className="flex flex-wrap justify-end gap-1">
-          <Button size="sm" variant="ghost" onClick={() => setOpen(open === d.id ? null : d.id)}>Histórico</Button>
+          <Button size="sm" variant="ghost" onClick={() => setOpen(open === d.id ? null : d.id)}>
+            Histórico
+          </Button>
           {d.status === "active" && (
             <>
-              <Button size="sm" variant="ghost" onClick={() => setPayFor({ debt: d, requestId: newId() })}>Registrar pagamento</Button>
-              <Button size="sm" variant="ghost" onClick={() => setBalanceFor(d)}>Atualizar saldo</Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setPayFor({ debt: d, requestId: newId() })}
+              >
+                Registrar pagamento
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setBalanceFor(d)}>
+                Atualizar saldo
+              </Button>
             </>
           )}
-          <Button size="sm" variant="ghost" onClick={() => setEdit({ open: true, debt: d })}>Editar</Button>
+          <Button size="sm" variant="ghost" onClick={() => setEdit({ open: true, debt: d })}>
+            Editar
+          </Button>
           {d.status === "active" ? (
-            <ConfirmButton label="Quitar" confirm="Confirmar quitação" onConfirm={() => runAction(() => settleDebt(d.id, todayISO()), "Dívida quitada")} />
+            <ConfirmButton
+              label="Quitar"
+              confirm="Confirmar quitação"
+              onConfirm={() => runAction(() => settleDebt(d.id, todayISO()), "Dívida quitada")}
+            />
           ) : (
-            <Button size="sm" variant="ghost" onClick={() => runAction(() => reopenDebt(d.id), "Dívida reaberta")}>Reabrir</Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => runAction(() => reopenDebt(d.id), "Dívida reaberta")}
+            >
+              Reabrir
+            </Button>
           )}
-          {!pays.length && <ConfirmButton label="Excluir" confirm="Excluir dívida" onConfirm={() => runAction(() => deleteDebt(d.id), "Dívida excluída")} />}
+          {!pays.length && (
+            <ConfirmButton
+              label="Excluir"
+              confirm="Excluir dívida"
+              onConfirm={() => runAction(() => deleteDebt(d.id), "Dívida excluída")}
+            />
+          )}
         </div>
         {open === d.id && (
           <div className="grid gap-3 text-sm">
@@ -86,14 +127,24 @@ function Dividas() {
               ) : (
                 <ul className="divide-y rounded-lg border">
                   {pays.map((t) => (
-                    <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+                    <li
+                      key={t.id}
+                      className="flex flex-wrap items-center justify-between gap-2 px-3 py-2"
+                    >
                       <span>
-                        {fmtDate(t.date)} · {t.type === "loan_proceeds" ? "Entrada do empréstimo" : t.allocation === "pending" ? "A classificar" : `Principal ${f(t.principalAmount ?? 0)} · juros ${f(t.interestAmount ?? 0)} · encargos ${f(t.feesAmount ?? 0)}`}
+                        {fmtDate(t.date)} ·{" "}
+                        {t.type === "loan_proceeds"
+                          ? "Entrada do empréstimo"
+                          : t.allocation === "pending"
+                            ? "A classificar"
+                            : `Principal ${f(t.principalAmount ?? 0)} · juros ${f(t.interestAmount ?? 0)} · encargos ${f(t.feesAmount ?? 0)}`}
                       </span>
                       <span className="flex items-center gap-2">
                         <span className="tabular-nums">{f(t.amount)}</span>
                         {t.allocation === "pending" && (
-                          <Button size="sm" variant="outline" onClick={() => setClassify(t)}>Classificar</Button>
+                          <Button size="sm" variant="outline" onClick={() => setClassify(t)}>
+                            Classificar
+                          </Button>
                         )}
                       </span>
                     </li>
@@ -106,7 +157,10 @@ function Dividas() {
               <ul className="divide-y rounded-lg border">
                 {snaps.map((b) => (
                   <li key={b.id} className="flex justify-between px-3 py-2">
-                    <span>{fmtDate(b.date)}{b.note ? ` · ${b.note}` : ""}</span>
+                    <span>
+                      {fmtDate(b.date)}
+                      {b.note ? ` · ${b.note}` : ""}
+                    </span>
                     <span className="tabular-nums">{f(b.balance)}</span>
                   </li>
                 ))}
@@ -119,7 +173,10 @@ function Dividas() {
   };
   return (
     <>
-      <PageHeader title="Dívidas" subtitle="Empréstimos e financiamentos. Cartões de crédito ficam em Contas, pelo saldo negativo." />
+      <PageHeader
+        title="Dívidas"
+        subtitle="Empréstimos e financiamentos. Cartões de crédito ficam em Contas, pelo saldo negativo."
+      />
       <Button className="mb-5 h-11" onClick={() => setEdit({ open: true })}>
         <Plus className="h-4 w-4" /> Nova dívida
       </Button>
@@ -130,7 +187,13 @@ function Dividas() {
       ) : (
         <ul className="grid gap-3">{debts.map(card)}</ul>
       )}
-      <DebtDialog open={edit.open} debt={edit.debt} accounts={w.accounts} defaultCurrency={w.currency} onOpenChange={(o) => setEdit((s) => ({ ...s, open: o }))} />
+      <DebtDialog
+        open={edit.open}
+        debt={edit.debt}
+        accounts={w.accounts}
+        defaultCurrency={w.currency}
+        onOpenChange={(o) => setEdit((s) => ({ ...s, open: o }))}
+      />
       <AmountDateDialog
         open={!!balanceFor}
         onOpenChange={(o) => !o && setBalanceFor(null)}

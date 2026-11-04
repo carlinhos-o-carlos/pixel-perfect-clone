@@ -35,7 +35,7 @@ function Shell({
   open: boolean;
   onOpenChange: (o: boolean) => void;
   title: string;
-  description?: string;
+  description?: string | undefined;
   children: ReactNode;
 }) {
   return (
@@ -79,7 +79,7 @@ function CurrencySelect({
   id: string;
   value: string;
   onChange: (v: string) => void;
-  disabled?: boolean;
+  disabled?: boolean | undefined;
 }) {
   const list = SUPPORTED_CURRENCIES.includes(value)
     ? SUPPORTED_CURRENCIES
@@ -590,12 +590,12 @@ export function PaymentDialog({
           e.preventDefault();
           const total = classify ? fixedAmount : parseToCents(amount, currency);
           if (total === null || total <= 0) return s.setErrors(["Valor pago inválido."]);
-          let split;
+          let split: { principal: number; interest: number; fees: number } | undefined;
           if (known) {
             const [p, i, f] = [principal, interest, fees].map((v) =>
               parseToCents(v || "0", currency),
             );
-            if (p === null || i === null || f === null) return s.setErrors(["Valores inválidos."]);
+            if (p == null || i == null || f == null) return s.setErrors(["Valores inválidos."]);
             split = { principal: p, interest: i, fees: f };
           }
           void s.run(() => onSave({ accountId, date, amount: total, split }), "Pagamento salvo");
