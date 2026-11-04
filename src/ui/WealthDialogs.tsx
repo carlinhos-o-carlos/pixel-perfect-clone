@@ -79,7 +79,7 @@ function CurrencySelect({
   id: string;
   value: string;
   onChange: (v: string) => void;
-  disabled?: boolean;
+  disabled?: boolean | undefined;
 }) {
   const list = SUPPORTED_CURRENCIES.includes(value)
     ? SUPPORTED_CURRENCIES

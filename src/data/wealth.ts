@@ -19,9 +19,10 @@ import {
 } from "@/domain/wealth";
 import type { Asset, Debt, Goal, GoalAllocation, ISODate, Transaction } from "@/domain/types";
 
-const strip = <T extends object>(o: object): T => {
-  for (const k of Object.keys(o) as (keyof T)[]) if (o[k] === undefined) delete o[k];
-  return o;
+const strip = <T>(o: object): T => {
+  const r = o as Record<string, unknown>;
+  for (const k of Object.keys(r)) if (r[k] === undefined) delete r[k];
+  return r as T;
 };
 const now = () => new Date().toISOString();
 
@@ -373,8 +374,8 @@ export async function updateGoal(id: string, input: GoalInput, db: FinanceDB = g
       description: input.description?.trim() || undefined,
       updatedAt: now(),
     };
-    if (!input.targetDate) delete next.targetDate;
-    await db.goals.put(strip(next));
+    if (!input.targetDate) delete (next as Partial<Goal>).targetDate;
+    await db.goals.put(strip<Goal>(next));
   });
 }
 
