@@ -9,7 +9,8 @@ import { ASSET_TYPE_LABEL, currentAssetValue } from "@/domain/wealth";
 import type { Asset } from "@/domain/types";
 import { EmptyState, PageHeader } from "@/ui/Page";
 import { AmountDateDialog, AssetDialog } from "@/ui/WealthDialogs";
-import { Card, ConfirmButton, fmtDate, meta, runAction } from "@/ui/WealthBits";
+import { Card, ConfirmButton } from "@/ui/WealthBits";
+import { fmtDate, meta, runAction } from "@/ui/wealthHelpers";
 
 export const Route = createFileRoute("/mais/ativos")({
   head: () => meta("Bens", "Imóveis, veículos e outros bens com valor estimado e histórico."),

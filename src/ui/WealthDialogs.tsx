@@ -595,7 +595,7 @@ export function PaymentDialog({
             const [p, i, f] = [principal, interest, fees].map((v) =>
               parseToCents(v || "0", currency),
             );
-            if (p === null || i === null || f === null) return s.setErrors(["Valores inválidos."]);
+            if (p == null || i == null || f == null) return s.setErrors(["Valores inválidos."]);
             split = { principal: p, interest: i, fees: f };
           }
           void s.run(() => onSave({ accountId, date, amount: total, split }), "Pagamento salvo");

@@ -16,7 +16,8 @@ import { GOAL_TYPE_LABEL, allocationCapacity, goalProgress } from "@/domain/weal
 import type { Goal, GoalAllocation } from "@/domain/types";
 import { EmptyState, PageHeader } from "@/ui/Page";
 import { AmountDateDialog, GoalDialog } from "@/ui/WealthDialogs";
-import { Card, ConfirmButton, fmtDate, meta, runAction } from "@/ui/WealthBits";
+import { Card, ConfirmButton } from "@/ui/WealthBits";
+import { fmtDate, meta, runAction } from "@/ui/wealthHelpers";
 
 export const Route = createFileRoute("/mais/metas")({
   head: () =>

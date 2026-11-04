@@ -20,7 +20,8 @@ import type { Debt, Transaction } from "@/domain/types";
 import { centsToInput } from "@/ui/form";
 import { EmptyState, PageHeader } from "@/ui/Page";
 import { AmountDateDialog, DebtDialog, PaymentDialog } from "@/ui/WealthDialogs";
-import { Card, ConfirmButton, fmtDate, meta, runAction } from "@/ui/WealthBits";
+import { Card, ConfirmButton } from "@/ui/WealthBits";
+import { fmtDate, meta, runAction } from "@/ui/wealthHelpers";
 
 export const Route = createFileRoute("/mais/dividas")({
   head: () =>

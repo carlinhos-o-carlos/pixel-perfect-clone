@@ -6,7 +6,7 @@ import { readWealth } from "@/data/wealth";
 import { formatMoney } from "@/domain/money";
 import { netWorthByCurrency } from "@/domain/wealth";
 import { EmptyState, PageHeader } from "@/ui/Page";
-import { fmtDate, meta } from "@/ui/WealthBits";
+import { fmtDate, meta } from "@/ui/wealthHelpers";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/mais/patrimonio")({
