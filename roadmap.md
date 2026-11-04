@@ -7,5 +7,6 @@
 - [x] Phase 3 adjustment — safe rule deletion, explicit history confirmation, integrity and regression tests
 - [x] Phase 4 — dashboard, cash flow, category budgets; 69 tests, lint and automatic build verified
 - [x] Navigation visual adjustment — consistent centered shortcuts; 69 tests, lint and automatic build passed; desktop and 393/320px mobile verified; no Phase 5
-- [ ] Phase 5–8 — wait for approval per phase
+- [x] Phase 5 — assets, debts, net worth, goals; 84 tests, lint 0 errors, production build OK, mobile flow verified
+- [ ] Phase 6–8 — wait for approval per phase
 - Blocked: reference spreadsheet (Phase 8) — awaiting user
