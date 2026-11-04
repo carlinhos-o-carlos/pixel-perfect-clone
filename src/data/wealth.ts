@@ -19,7 +19,7 @@ import {
 } from "@/domain/wealth";
 import type { Asset, Debt, Goal, GoalAllocation, ISODate, Transaction } from "@/domain/types";
 
-const strip = <T extends object>(o: T): T => {
+const strip = <T extends object>(o: object): T => {
   for (const k of Object.keys(o) as (keyof T)[]) if (o[k] === undefined) delete o[k];
   return o;
 };

@@ -35,7 +35,7 @@ function Shell({
   open: boolean;
   onOpenChange: (o: boolean) => void;
   title: string;
-  description?: string;
+  description?: string | undefined;
   children: ReactNode;
 }) {
   return (
@@ -590,7 +590,7 @@ export function PaymentDialog({
           e.preventDefault();
           const total = classify ? fixedAmount : parseToCents(amount, currency);
           if (total === null || total <= 0) return s.setErrors(["Valor pago inválido."]);
-          let split;
+          let split: { principal: number; interest: number; fees: number } | undefined;
           if (known) {
             const [p, i, f] = [principal, interest, fees].map((v) =>
               parseToCents(v || "0", currency),
