@@ -278,7 +278,7 @@ describe("persistência das recorrências", () => {
     try {
       await upgraded.open();
       expect(await upgraded.accounts.get(accountId)).toEqual(account);
-      expect((await upgraded.settings.get("app"))?.schemaVersion).toBe(2);
+      expect((await upgraded.settings.get("app"))?.schemaVersion).toBe(4);
       await upgraded.transactions.add({
         id: "one",
         recurringRuleId: "r",

@@ -36,7 +36,7 @@ describe("debt balance correction", () => {
     const tx = await registerDebtPayment(debt.id, p, db);
     expect(await status(debt)).toMatchObject({ balance: 500_000, pending: 50_000 });
     let w = await readWealth(db);
-    expect(netWorthByCurrency({ ...w, today: D }).BRL?.netWorth).toBe(100_000);
+    expect(netWorthByCurrency({ ...w, today: D })["BRL"]?.netWorth).toBe(100_000);
     const split = { principal: 40_000, interest: 8_000, fees: 2_000 };
     await allocateDebtPayment(tx.id, split, db);
     const classified = await db.transactions.get(tx.id);
@@ -46,7 +46,7 @@ describe("debt balance correction", () => {
     expect(await db.transactions.count()).toBe(1);
     expect(await status(debt)).toMatchObject({ balance: 460_000, pending: 0 });
     w = await readWealth(db);
-    expect(netWorthByCurrency({ ...w, today: D }).BRL?.netWorth).toBe(90_000);
+    expect(netWorthByCurrency({ ...w, today: D })["BRL"]?.netWorth).toBe(90_000);
     await expect(allocateDebtPayment(tx.id, { principal: 50_000, interest: 0, fees: 0 }, db)).rejects.toThrow();
   });
   it("interest and fees never reduce principal", async () => {
