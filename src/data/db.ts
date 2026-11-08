@@ -16,7 +16,7 @@ import type {
   Transaction,
 } from "@/domain/types";
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export class FinanceDB extends Dexie {
   accounts!: EntityTable<Account, "id">;
@@ -99,6 +99,27 @@ export class FinanceDB extends Dexie {
           })),
         );
       });
+    // v4 adds provenance only; amounts, IDs and history counts stay untouched.
+    this.version(4).stores({ debtBalances: "id, debtId" }).upgrade(async (tx) => {
+      const debts: Debt[] = await tx.table("debts").toArray();
+      const rows: DebtBalance[] = await tx.table("debtBalances").toArray();
+      for (const debt of debts) {
+        const history = rows.filter((r) => r.debtId === debt.id);
+        const earliest = [...history].sort((a, b) => a.createdAt.localeCompare(b.createdAt))[0];
+        const candidates = history.filter((r) => r.createdAt === earliest?.createdAt);
+        // Both app-created and v3-seeded histories start with the opening row.
+        // Tied or inconsistent legacy histories are never guessed as initial.
+        const initial = candidates.length === 1 && earliest?.date === debt.openingDate &&
+          earliest.balance === debt.openingBalance && !earliest.note ? earliest.id : undefined;
+        for (const row of history) {
+          if (row.kind) continue;
+          await tx.table("debtBalances").update(row.id, {
+            kind: row.id === initial ? "initial" : "legacy",
+          });
+        }
+      }
+      await tx.table("settings").toCollection().modify({ schemaVersion: 4 });
+    });
     this.on("populate", (tx) => seedInitialData(tx.table("categories"), tx.table("settings")));
   }
 }

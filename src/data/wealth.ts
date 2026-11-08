@@ -161,7 +161,7 @@ export async function createDebt(
         debt.proceedsTransactionId = tx.id;
       }
       await db.debts.add(debt);
-      await db.debtBalances.add({ id: newId(), debtId: debt.id, date, balance, createdAt: t });
+      await db.debtBalances.add({ id: newId(), debtId: debt.id, date, balance, kind: "initial", createdAt: t });
       return debt;
     },
   );
@@ -204,7 +204,7 @@ export async function addDebtBalance(
   await db.transaction("rw", db.debts, db.debtBalances, async () => {
     const d = await db.debts.get(debtId);
     if (!d) throw new ValidationError(["Dívida não encontrada."]);
-    await db.debtBalances.add({ id: newId(), debtId, date, balance, createdAt: now() });
+    await db.debtBalances.add({ id: newId(), debtId, date, balance, kind: "reconciled", createdAt: now() });
     await db.debts.update(debtId, { updatedAt: now() });
   });
 }
@@ -225,6 +225,7 @@ export async function registerDebtPayment(
   db: FinanceDB = getDb(),
 ): Promise<Transaction> {
   const errors: string[] = [];
+  if (!p.requestId?.trim()) errors.push("Identificador do pagamento inválido.");
   if (!Number.isSafeInteger(p.amount) || p.amount <= 0)
     errors.push("O valor pago precisa ser maior que zero.");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(p.date) || Number.isNaN(Date.parse(p.date)))
@@ -234,7 +235,11 @@ export async function registerDebtPayment(
   return db.transaction("rw", db.debts, db.accounts, db.transactions, async () => {
     const existing = await db.transactions.get(p.requestId);
     if (existing) {
-      if (existing.debtId === debtId) return existing;
+      if (existing.type === "debt_payment" && existing.debtId === debtId &&
+        existing.accountId === p.accountId && existing.date === p.date && existing.amount === p.amount &&
+        (!p.split || (existing.allocation === "allocated" &&
+          existing.principalAmount === p.split.principal && existing.interestAmount === p.split.interest &&
+          existing.feesAmount === p.split.fees))) return existing;
       throw new ValidationError(["Pagamento duplicado."]);
     }
     const debt = await db.debts.get(debtId);
@@ -276,9 +281,11 @@ export async function allocateDebtPayment(
   await db.transaction("rw", db.transactions, async () => {
     const tx = await db.transactions.get(txId);
     if (!tx || tx.type !== "debt_payment") throw new ValidationError(["Pagamento não encontrado."]);
+    assertValid(validateSplit(tx.amount, split));
+    if (tx.allocation === "allocated" && tx.principalAmount === split.principal &&
+      tx.interestAmount === split.interest && tx.feesAmount === split.fees) return;
     if (tx.allocation !== "pending")
       throw new ValidationError(["Este pagamento já foi classificado."]);
-    assertValid(validateSplit(tx.amount, split));
     await db.transactions.update(txId, {
       allocation: "allocated",
       principalAmount: split.principal,
@@ -301,6 +308,7 @@ export async function settleDebt(id: string, date: ISODate, db: FinanceDB = getD
       debtId: id,
       date,
       balance: 0,
+      kind: "reconciled",
       note: "Quitação",
       createdAt: now(),
     });
