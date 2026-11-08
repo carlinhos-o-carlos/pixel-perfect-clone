@@ -161,7 +161,14 @@ export async function createDebt(
         debt.proceedsTransactionId = tx.id;
       }
       await db.debts.add(debt);
-      await db.debtBalances.add({ id: newId(), debtId: debt.id, date, balance, kind: "initial", createdAt: t });
+      await db.debtBalances.add({
+        id: newId(),
+        debtId: debt.id,
+        date,
+        balance,
+        kind: "initial",
+        createdAt: t,
+      });
       return debt;
     },
   );
@@ -204,7 +211,14 @@ export async function addDebtBalance(
   await db.transaction("rw", db.debts, db.debtBalances, async () => {
     const d = await db.debts.get(debtId);
     if (!d) throw new ValidationError(["Dívida não encontrada."]);
-    await db.debtBalances.add({ id: newId(), debtId, date, balance, kind: "reconciled", createdAt: now() });
+    await db.debtBalances.add({
+      id: newId(),
+      debtId,
+      date,
+      balance,
+      kind: "reconciled",
+      createdAt: now(),
+    });
     await db.debts.update(debtId, { updatedAt: now() });
   });
 }
@@ -235,11 +249,19 @@ export async function registerDebtPayment(
   return db.transaction("rw", db.debts, db.accounts, db.transactions, async () => {
     const existing = await db.transactions.get(p.requestId);
     if (existing) {
-      if (existing.type === "debt_payment" && existing.debtId === debtId &&
-        existing.accountId === p.accountId && existing.date === p.date && existing.amount === p.amount &&
-        (!p.split || (existing.allocation === "allocated" &&
-          existing.principalAmount === p.split.principal && existing.interestAmount === p.split.interest &&
-          existing.feesAmount === p.split.fees))) return existing;
+      if (
+        existing.type === "debt_payment" &&
+        existing.debtId === debtId &&
+        existing.accountId === p.accountId &&
+        existing.date === p.date &&
+        existing.amount === p.amount &&
+        (!p.split ||
+          (existing.allocation === "allocated" &&
+            existing.principalAmount === p.split.principal &&
+            existing.interestAmount === p.split.interest &&
+            existing.feesAmount === p.split.fees))
+      )
+        return existing;
       throw new ValidationError(["Pagamento duplicado."]);
     }
     const debt = await db.debts.get(debtId);
@@ -282,8 +304,13 @@ export async function allocateDebtPayment(
     const tx = await db.transactions.get(txId);
     if (!tx || tx.type !== "debt_payment") throw new ValidationError(["Pagamento não encontrado."]);
     assertValid(validateSplit(tx.amount, split));
-    if (tx.allocation === "allocated" && tx.principalAmount === split.principal &&
-      tx.interestAmount === split.interest && tx.feesAmount === split.fees) return;
+    if (
+      tx.allocation === "allocated" &&
+      tx.principalAmount === split.principal &&
+      tx.interestAmount === split.interest &&
+      tx.feesAmount === split.fees
+    )
+      return;
     if (tx.allocation !== "pending")
       throw new ValidationError(["Este pagamento já foi classificado."]);
     await db.transactions.update(txId, {

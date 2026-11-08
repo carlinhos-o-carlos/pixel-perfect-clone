@@ -180,7 +180,8 @@ export function debtStatus(
     else if (
       t.allocation === "allocated" &&
       (t.date > referenceDate || (initial && t.date === referenceDate))
-    ) balance = addCents(balance, -(t.principalAmount ?? 0));
+    )
+      balance = addCents(balance, -(t.principalAmount ?? 0));
   }
   return { balance: Math.max(0, balance), referenceDate, pending };
 }
