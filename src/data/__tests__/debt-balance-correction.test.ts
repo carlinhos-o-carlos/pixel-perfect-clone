@@ -180,14 +180,12 @@ describe("v4 history provenance migration", () => {
   it("preserves v3 amounts, IDs, payments and histories; ambiguous rows stay reconciled", async () => {
     const name = `legacy-${newId()}`;
     const old = new Dexie(name);
-    old
-      .version(3)
-      .stores({
-        debts: "id, status",
-        debtBalances: "id, debtId",
-        transactions: "id, debtId",
-        settings: "id",
-      });
+    old.version(3).stores({
+      debts: "id, status",
+      debtBalances: "id, debtId",
+      transactions: "id, debtId",
+      settings: "id",
+    });
     await old.open();
     const debt: Debt = {
       id: "d",
