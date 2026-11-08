@@ -114,12 +114,13 @@ export interface Debt extends Audit {
   paidAt?: ISODate | undefined;
 }
 
-/** Manual debt balance at a reference date; never rewritten. */
+/** Append-only reference. Legacy uncertainty retains reconciled semantics. */
 export interface DebtBalance {
   id: string;
   debtId: string;
   date: ISODate;
   balance: Cents;
+  kind?: "initial" | "reconciled" | "legacy";
   note?: string | undefined;
   createdAt: ISOTimestamp;
 }

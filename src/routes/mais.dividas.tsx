@@ -159,6 +159,7 @@ function Dividas() {
                   <li key={b.id} className="flex justify-between px-3 py-2">
                     <span>
                       {fmtDate(b.date)}
+                      {b.kind === "initial" ? " · Saldo inicial" : " · Saldo reconciliado"}
                       {b.note ? ` · ${b.note}` : ""}
                     </span>
                     <span className="tabular-nums">{f(b.balance)}</span>
@@ -201,14 +202,20 @@ function Dividas() {
         description="Informe o saldo devedor do extrato. Saldos e pagamentos anteriores ficam no histórico."
         currency={balanceFor?.currency ?? "BRL"}
         amountLabel="Saldo devedor"
-        onSave={(v, d) => addDebtBalance(balanceFor!.id, v, d)}
+        onSave={async (v, d) => {
+          if (!balanceFor) return;
+          await addDebtBalance(balanceFor.id, v, d);
+        }}
       />
       <PaymentDialog
         open={!!payFor}
         onOpenChange={(o) => !o && setPayFor(null)}
         currency={payFor?.debt.currency ?? "BRL"}
         accounts={w.accounts}
-        onSave={(p) => registerDebtPayment(payFor!.debt.id, { ...p, requestId: payFor!.requestId })}
+        onSave={async (p) => {
+          if (!payFor) return;
+          await registerDebtPayment(payFor.debt.id, { ...p, requestId: payFor.requestId });
+        }}
       />
       <PaymentDialog
         open={!!classify}
@@ -216,7 +223,10 @@ function Dividas() {
         currency={classify?.currency ?? "BRL"}
         accounts={w.accounts}
         fixedAmount={classify?.amount}
-        onSave={(p) => allocateDebtPayment(classify!.id, p.split!)}
+        onSave={async (p) => {
+          if (!classify || !p.split) return;
+          await allocateDebtPayment(classify.id, p.split);
+        }}
       />
     </>
   );

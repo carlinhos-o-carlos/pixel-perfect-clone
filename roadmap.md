@@ -8,5 +8,6 @@
 - [x] Phase 4 — dashboard, cash flow, category budgets; 69 tests, lint and automatic build verified
 - [x] Navigation visual adjustment — consistent centered shortcuts; 69 tests, lint and automatic build passed; desktop and 393/320px mobile verified; no Phase 5
 - [x] Phase 5 — assets, debts, net worth, goals; 84 tests, lint 0 errors, production build OK, mobile flow verified
+- [x] Phase 5 correction — initial/manual debt references, same-day principal, safe retries, v4 migration; 94 tests, lint 0 errors, automatic build OK and UI flow verified; no publication
 - [ ] Phase 6–8 — wait for approval per phase
 - Blocked: reference spreadsheet (Phase 8) — awaiting user

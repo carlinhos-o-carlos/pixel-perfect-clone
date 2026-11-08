@@ -151,7 +151,7 @@ export function validateSplit(amount: Cents, s: PaymentSplit): string[] {
 }
 
 export interface DebtStatus {
-  /** Latest manual balance (reference) minus allocated principal paid after it. */
+  /** Initial reference includes same-day principal; reconciled references do not. */
   balance: Cents;
   referenceDate: ISODate;
   /** Paid but not yet split into principal/interest: never reduces the balance. */
@@ -159,9 +159,8 @@ export interface DebtStatus {
 }
 
 /**
- * Manual balance snapshots are the source of truth; payments made AFTER the
- * latest snapshot reduce it only by their allocated principal. Payments with
- * unknown split stay pending and do not touch the balance.
+ * Initial references precede that day's payments. Reconciled snapshots include
+ * all payments through their reference date. Future snapshots are not current.
  */
 export function debtStatus(
   debt: Debt,
@@ -169,15 +168,20 @@ export function debtStatus(
   txs: Transaction[],
   today: ISODate,
 ): DebtStatus {
-  const snap = latest(snapshots.filter((s) => s.debtId === debt.id));
+  const snap = latest(snapshots.filter((s) => s.debtId === debt.id && s.date <= today));
   const referenceDate = snap?.date ?? debt.openingDate;
-  let balance = snap?.balance ?? debt.openingBalance;
+  const initial = !snap || snap.kind === "initial";
+  let balance = snap?.balance ?? (debt.openingDate <= today ? debt.openingBalance : 0);
   let pending = 0;
   for (const t of txs) {
     if (t.debtId !== debt.id || t.type !== "debt_payment") continue;
     if (effectiveState(t, today) !== "actual") continue;
     if (t.allocation === "pending") pending = addCents(pending, t.amount);
-    else if (t.date > referenceDate) balance = addCents(balance, -(t.principalAmount ?? 0));
+    else if (
+      t.allocation === "allocated" &&
+      (t.date > referenceDate || (initial && t.date === referenceDate))
+    )
+      balance = addCents(balance, -(t.principalAmount ?? 0));
   }
   return { balance: Math.max(0, balance), referenceDate, pending };
 }
